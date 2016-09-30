@@ -1760,6 +1760,7 @@
                             <exclude>**/build-number.txt</exclude>
 
                             <exclude>**/org/springframework/**</exclude>
+                            <exclude>**/org/glassfish/jersey/**</exclude>
                             <exclude>**/HttpTransactionContext.java</exclude>
                             <exclude>**/HttpConnection.java</exclude>
                             <exclude>**/BndMojo.java</exclude>
