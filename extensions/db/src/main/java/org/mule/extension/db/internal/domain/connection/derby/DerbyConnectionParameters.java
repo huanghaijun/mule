@@ -15,8 +15,8 @@ import org.mule.runtime.extension.api.annotation.param.display.Placement;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.mule.runtime.extension.api.annotation.param.display.Placement.ADVANCED;
-import static org.mule.runtime.extension.api.annotation.param.display.Placement.CONNECTION;
+import static org.mule.runtime.extension.api.annotation.param.display.Group.ADVANCED;
+import static org.mule.runtime.extension.api.annotation.param.display.Group.CONNECTION;
 
 /**
  * {@link DataSourceConfig} implementation for Derby databases.

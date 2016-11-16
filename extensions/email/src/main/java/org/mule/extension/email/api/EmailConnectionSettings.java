@@ -6,7 +6,7 @@
  */
 package org.mule.extension.email.api;
 
-import static org.mule.runtime.extension.api.annotation.param.display.Placement.CONNECTION;
+import static org.mule.runtime.extension.api.annotation.param.display.Group.CONNECTION;
 
 import org.mule.runtime.extension.api.annotation.param.Parameter;
 import org.mule.runtime.extension.api.annotation.param.Optional;

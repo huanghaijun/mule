@@ -10,7 +10,7 @@ import static org.mule.extension.email.internal.EmailConnector.TLS_CONFIGURATION
 import static org.mule.extension.email.internal.EmailProtocol.SMTPS;
 import static org.mule.extension.email.internal.util.EmailConnectorConstants.SMTPS_PORT;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.initialiseIfNeeded;
-import static org.mule.runtime.extension.api.annotation.param.display.Placement.CONNECTION;
+import static org.mule.runtime.extension.api.annotation.param.display.Group.CONNECTION;
 
 import org.mule.extension.email.internal.mailbox.MailboxConnection;
 import org.mule.runtime.api.connection.ConnectionException;

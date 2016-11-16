@@ -9,7 +9,7 @@ package org.mule.extension.socket.api.provider.tcp;
 import static org.mule.extension.socket.api.SocketsExtension.TLS;
 import static org.mule.extension.socket.api.SocketsExtension.TLS_CONFIGURATION;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.initialiseIfNeeded;
-import static org.mule.runtime.extension.api.annotation.param.display.Placement.CONNECTION;
+import static org.mule.runtime.extension.api.annotation.param.display.Group.CONNECTION;
 import org.mule.extension.socket.api.ConnectionSettings;
 import org.mule.extension.socket.api.SocketOperations;
 import org.mule.extension.socket.api.connection.tcp.TcpRequesterConnection;

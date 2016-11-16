@@ -13,7 +13,7 @@ import org.mule.runtime.extension.api.annotation.param.display.Placement;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.mule.runtime.extension.api.annotation.param.display.Placement.ADVANCED;
+import static org.mule.runtime.extension.api.annotation.param.display.Group.ADVANCED;
 
 /**
  * Parameters to configure queries

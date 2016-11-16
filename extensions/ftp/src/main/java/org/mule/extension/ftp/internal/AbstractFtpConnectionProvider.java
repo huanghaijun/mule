@@ -6,8 +6,8 @@
  */
 package org.mule.extension.ftp.internal;
 
-import static org.mule.runtime.extension.api.annotation.param.display.Placement.ADVANCED;
-import static org.mule.runtime.extension.api.annotation.param.display.Placement.CONNECTION;
+import static org.mule.runtime.extension.api.annotation.param.display.Group.ADVANCED;
+import static org.mule.runtime.extension.api.annotation.param.display.Group.CONNECTION;
 
 import org.mule.extension.file.common.api.FileSystemProvider;
 import org.mule.extension.ftp.internal.ftp.connection.ClassicFtpFileSystem;

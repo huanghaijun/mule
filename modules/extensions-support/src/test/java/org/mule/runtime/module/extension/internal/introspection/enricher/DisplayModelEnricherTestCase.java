@@ -56,7 +56,7 @@ public class DisplayModelEnricherTestCase extends AbstractMuleTestCase {
   @Test
   public void parseDisplayAnnotationsOnParameter() {
     ExtensionDeclaration extensionDeclaration = declarer.getDeclaration();
-    List<ParameterDeclaration> parameters = extensionDeclaration.getConfigurations().get(0).getParameters();
+    List<ParameterDeclaration> parameters = extensionDeclaration.getConfigurations().get(0).getAllParameters();
 
     assertParameterDisplayName(findParameter(parameters, PARAMETER_ORIGINAL_OVERRIDED_DISPLAY_NAME),
                                PARAMETER_OVERRIDED_DISPLAY_NAME);
@@ -65,7 +65,7 @@ public class DisplayModelEnricherTestCase extends AbstractMuleTestCase {
   @Test
   public void parseDisplayNameAnnotationOnParameterGroup() {
     ExtensionDeclaration extensionDeclaration = declarer.getDeclaration();
-    List<ParameterDeclaration> parameters = extensionDeclaration.getConfigurations().get(0).getParameters();
+    List<ParameterDeclaration> parameters = extensionDeclaration.getConfigurations().get(0).getAllParameters();
 
     assertParameterDisplayName(findParameter(parameters, PARAMETER_GROUP_ORIGINAL_DISPLAY_NAME), PARAMETER_GROUP_DISPLAY_NAME);
   }
@@ -77,7 +77,7 @@ public class DisplayModelEnricherTestCase extends AbstractMuleTestCase {
         getOperation(extensionDeclaration, HeisenbergOperations.OPERATION_WITH_DISPLAY_NAME_PARAMETER);
 
     assertThat(operation, is(notNullValue()));
-    List<ParameterDeclaration> parameters = operation.getParameters();
+    List<ParameterDeclaration> parameters = operation.getAllParameters();
 
     assertParameterDisplayName(findParameter(parameters, OPERATION_PARAMETER_ORIGINAL_OVERRIDED_DISPLAY_NAME),
                                OPERATION_PARAMETER_OVERRIDED_DISPLAY_NAME);
@@ -86,7 +86,7 @@ public class DisplayModelEnricherTestCase extends AbstractMuleTestCase {
   @Test
   public void parseSummaryAnnotationOnConfigParameter() {
     ExtensionDeclaration extensionDeclaration = declarer.getDeclaration();
-    List<ParameterDeclaration> parameters = extensionDeclaration.getConfigurations().get(0).getParameters();
+    List<ParameterDeclaration> parameters = extensionDeclaration.getConfigurations().get(0).getAllParameters();
 
     assertParameterSummary(findParameter(parameters, "ricinPacks"), RICIN_PACKS_SUMMARY);
   }
@@ -98,7 +98,7 @@ public class DisplayModelEnricherTestCase extends AbstractMuleTestCase {
         getOperation(extensionDeclaration, HeisenbergOperations.OPERATION_WITH_SUMMARY);
 
     assertThat(operation, is(notNullValue()));
-    List<ParameterDeclaration> parameters = operation.getParameters();
+    List<ParameterDeclaration> parameters = operation.getAllParameters();
 
     assertParameterSummary(findParameter(parameters, DOOR_PARAMETER), KNOCKEABLE_DOORS_SUMMARY);
   }

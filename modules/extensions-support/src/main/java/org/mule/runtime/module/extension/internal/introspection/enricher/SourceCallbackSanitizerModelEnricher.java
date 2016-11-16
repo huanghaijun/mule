@@ -49,15 +49,15 @@ public final class SourceCallbackSanitizerModelEnricher implements ModelEnricher
       protected void onSource(SourceDeclaration declaration) {
         List<ParameterDeclaration> callbackParameters = getCallbackParameters(declaration);
         if (!callbackParameters.isEmpty()) {
-          declaration.getParameters().removeAll(callbackParameters);
-          declaration.getParameters().addAll(sanitizeCallbackParameters(callbackParameters));
+          declaration.getParameterGroups().forEach(g -> g.getParameters().removeAll(callbackParameters));
+          declaration.getParameterGroups().forEach(g -> g.getParameters().addAll(sanitizeCallbackParameters(callbackParameters)));
         }
       }
     }.walk(describingContext.getExtensionDeclarer().getDeclaration());
   }
 
   private List<ParameterDeclaration> getCallbackParameters(SourceDeclaration declaration) {
-    return declaration.getParameters().stream()
+    return declaration.getAllParameters().stream()
         .filter(p -> p.getModelProperty(CallbackParameterModelProperty.class).isPresent())
         .collect(toList());
   }

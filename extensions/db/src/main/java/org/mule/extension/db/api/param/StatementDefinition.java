@@ -21,7 +21,7 @@ import java.util.List;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.mule.extension.db.api.param.DbNameConstants.SQL_QUERY_TEXT;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
-import static org.mule.runtime.extension.api.annotation.param.display.Placement.ADVANCED;
+import static org.mule.runtime.extension.api.annotation.param.display.Group.ADVANCED;
 
 /**
  * Base class containing common attributes for a statement.

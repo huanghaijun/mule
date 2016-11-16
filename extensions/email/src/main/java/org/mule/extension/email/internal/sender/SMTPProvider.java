@@ -8,7 +8,7 @@ package org.mule.extension.email.internal.sender;
 
 import static org.mule.extension.email.internal.EmailProtocol.SMTP;
 import static org.mule.extension.email.internal.util.EmailConnectorConstants.SMTP_PORT;
-import static org.mule.runtime.extension.api.annotation.param.display.Placement.CONNECTION;
+import static org.mule.runtime.extension.api.annotation.param.display.Group.CONNECTION;
 
 import org.mule.runtime.api.connection.ConnectionException;
 import org.mule.runtime.api.connection.ConnectionProvider;

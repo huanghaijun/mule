@@ -9,7 +9,7 @@ package org.mule.extension.http.internal.listener.server;
 import static org.mule.extension.http.internal.HttpConnectorConstants.REQUEST_SETTINGS;
 import static org.mule.extension.http.internal.HttpConnectorConstants.URL_CONFIGURATION;
 import static org.mule.runtime.api.util.Preconditions.checkArgument;
-import static org.mule.runtime.extension.api.annotation.param.display.Placement.ADVANCED;
+import static org.mule.runtime.extension.api.annotation.param.display.Group.ADVANCED;
 import static org.mule.runtime.api.meta.ExpressionSupport.NOT_SUPPORTED;
 import org.mule.extension.http.internal.listener.HttpListener;
 import org.mule.extension.http.internal.listener.HttpListenerProvider;

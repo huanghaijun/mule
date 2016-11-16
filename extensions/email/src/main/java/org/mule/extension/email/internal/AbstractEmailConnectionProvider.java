@@ -6,8 +6,8 @@
  */
 package org.mule.extension.email.internal;
 
-import static org.mule.runtime.extension.api.annotation.param.display.Placement.ADVANCED;
-import static org.mule.runtime.extension.api.annotation.param.display.Placement.GENERAL;
+import static org.mule.runtime.extension.api.annotation.param.display.Group.ADVANCED;
+import static org.mule.runtime.extension.api.annotation.param.display.Group.GENERAL;
 
 import org.mule.runtime.api.connection.ConnectionProvider;
 import org.mule.runtime.extension.api.annotation.param.Parameter;

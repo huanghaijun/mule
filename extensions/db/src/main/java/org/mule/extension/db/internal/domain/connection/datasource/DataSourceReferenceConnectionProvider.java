@@ -19,7 +19,7 @@ import java.util.Optional;
 import javax.sql.DataSource;
 import javax.sql.XADataSource;
 
-import static org.mule.runtime.extension.api.annotation.param.display.Placement.CONNECTION;
+import static org.mule.runtime.extension.api.annotation.param.display.Group.CONNECTION;
 
 /**
  * {@link ConnectionProvider} implementation which creates DB connections from a referenced {@link
