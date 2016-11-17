@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:jmsn="http://www.mulesoft.org/schema/mule/jmsn"
+      xmlns="http://www.mulesoft.org/schema/mule/core"
+      xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+      http://www.mulesoft.org/schema/mule/jmsn http://www.mulesoft.org/schema/mule/jmsn/current/mule-jmsn.xsd">
+
+    <flow name="send-payload">
+        <jmsn:publish config-ref="producer" destination="#[flowVars.initialDestination]">
+            <jmsn:message-builder>
+                <jmsn:content>#[payload]</jmsn:content>
+                <jmsn:properties>
+                   #[[flowVars.initialProperty: flowVars.propertyValue]]
+                </jmsn:properties>
+            </jmsn:message-builder>
+        </jmsn:publish>
+    </flow>
+
+    <flow name="bridge">
+        <jmsn:consume config-ref="consumer" destination="#[flowVars.initialDestination]"/>
+        <jmsn:publish config-ref="producer" destination="#[flowVars.finalDestination]">
+            <jmsn:message-builder jmsxProperties="#[message.getAttributes().getProperties().getJmsxProperties()]">
+                <jmsn:content>#[flowVars.bridgePrefix]#[payload]</jmsn:content>
+                <jmsn:properties>#[message.getAttributes().getProperties().getUserProperties()]</jmsn:properties>
+            </jmsn:message-builder>
+        </jmsn:publish>
+    </flow>
+
+    <flow name="bridge-receiver">
+        <jmsn:consume config-ref="consumer" destination="#[flowVars.finalDestination]"/>
+    </flow>
+
+</mule>

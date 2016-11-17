@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <parent>
+        <groupId>org.mule.extensions</groupId>
+        <artifactId>mule-extensions</artifactId>
+        <version>4.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.mule.modules</groupId>
+    <artifactId>mule-module-jms</artifactId>
+    <packaging>mule-extension</packaging>
+
+    <name>Mule JMS Extension</name>
+    <description>A Mule extension that provides functionality for performing validations</description>
+
+    <properties>
+        <formatterConfigPath>../../formatter.xml</formatterConfigPath>
+        <springVersion>4.1.6.RELEASE</springVersion>
+        <activemq.version>5.14.1</activemq.version>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${mavenCompilerVersion}</version>
+                <configuration>
+                    <encoding>ISO-8859-1</encoding>
+                    <fork>true</fork>
+                    <maxmem>512m</maxmem>
+                    <source>${javaVersion}</source>
+                    <target>${javaVersion}</target>
+                    <proc>none</proc>
+                    <!-- Slightly faster builds, see https://jira.codehaus.org/browse/MCOMPILER-209 -->
+                    <useIncrementalCompilation>false</useIncrementalCompilation>
+                    <compilerArgs>
+                        <arg>-parameters</arg>
+                    </compilerArgs>
+                    <testCompilerArgument>-parameters</testCompilerArgument>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.marvinformatics.formatter</groupId>
+                <artifactId>formatter-maven-plugin</artifactId>
+                <version>${javaFormatter.plugin.version}</version>
+                <configuration>
+                    <compilerCompliance>${javaVersion}</compilerCompliance>
+                    <compilerSource>${javaVersion}</compilerSource>
+                    <compilerTargetPlatform>${javaVersion}</compilerTargetPlatform>
+                    <configFile>${basedir}/${formatterConfigPath}</configFile>
+                    <configJsFile>${basedir}/${formatterConfigPath}</configJsFile>
+                    <lineEnding>LF</lineEnding>
+                    <aggregator>false</aggregator>
+                    <executionRoot>true</executionRoot>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>format</goal>
+                        </goals>
+                        <configuration>
+                            <skipFormatting>${skipVerifications}</skipFormatting>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+    <dependencies>
+        <dependency>
+            <groupId>javax.jms</groupId>
+            <artifactId>javax.jms-api</artifactId>
+            <version>2.0.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jms</artifactId>
+            <version>${springVersion}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-broker</artifactId>
+            <version>${activemq.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-client</artifactId>
+            <version>${activemq.version}</version>
+        </dependency>
+
+        <!-- Used by ActiveMQ if persistent=true -->
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-kahadb-store</artifactId>
+            <version>${activemq.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mule.services</groupId>
+            <artifactId>mule-service-scheduler</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+            <classifier>mule-service</classifier>
+        </dependency>
+    </dependencies>
+</project>

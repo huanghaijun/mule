@@ -9,6 +9,7 @@ package org.mule.runtime.module.extension.internal.introspection.describer;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang.StringUtils.EMPTY;
+import static org.mule.metadata.java.api.utils.JavaTypeUtils.getType;
 import static org.mule.runtime.api.meta.ExpressionSupport.NOT_SUPPORTED;
 import static org.mule.runtime.api.meta.model.connection.ConnectionManagementType.CACHED;
 import static org.mule.runtime.api.meta.model.connection.ConnectionManagementType.NONE;
@@ -22,6 +23,7 @@ import static org.mule.runtime.module.extension.internal.introspection.describer
 import static org.mule.runtime.module.extension.internal.introspection.describer.MuleExtensionAnnotationParser.parseLayoutAnnotations;
 import static org.mule.runtime.module.extension.internal.model.property.CallbackParameterModelProperty.CallbackPhase.ON_ERROR;
 import static org.mule.runtime.module.extension.internal.model.property.CallbackParameterModelProperty.CallbackPhase.ON_SUCCESS;
+import static org.mule.runtime.module.extension.internal.util.ExtensionMetadataTypeUtils.isInstantiable;
 import static org.mule.runtime.module.extension.internal.util.IntrospectionUtils.getExpressionSupport;
 import static org.mule.runtime.module.extension.internal.util.IntrospectionUtils.getFieldsWithGetters;
 import static org.mule.runtime.module.extension.internal.util.IntrospectionUtils.getMethodReturnAttributesType;
@@ -627,13 +629,43 @@ public final class AnnotationsBasedDescriber implements Describer {
         @Override
         protected void visitBasicType(MetadataType metadataType) {
           throw new IllegalParameterModelDefinitionException(format("Parameter '%s' is annotated with '@%s' but is of type '%s'. That annotation can only be "
-              + "used with complex types (Pojos, Lists, Maps)",
+              + "used with complex instantiable types (Pojos, Lists, Maps)",
                                                                     extensionParameter.getName(), NullSafe.class.getSimpleName(),
                                                                     extensionParameter.getType().getName()));
         }
       });
 
-      parameter.withModelProperty(new NullSafeModelProperty());
+      Class<?> defaultType = extensionParameter.getAnnotation(NullSafe.class).get().defaultImplementingType();
+
+
+      if (isInstantiable(parameter.getDeclaration().getType()) && !defaultType.isAssignableFrom(Object.class)) {
+        throw new IllegalParameterModelDefinitionException(format("Parameter '%s' is annotated with '@%s' is of concrete type '%s',"
+            + " but a 'defaultImplementingType' was provided."
+            + " Type override is not allowed for concrete types",
+                                                                  extensionParameter.getName(), NullSafe.class.getSimpleName(),
+                                                                  extensionParameter.getType().getName()));
+      }
+
+      MetadataType nullSafeType = defaultType.isAssignableFrom(Object.class)
+          ? parameter.getDeclaration().getType()
+          : typeLoader.load(defaultType);
+
+      if (!isInstantiable(nullSafeType)) {
+        throw new IllegalParameterModelDefinitionException(format("Parameter '%s' is annotated with '@%s' but is of type '%s'. That annotation can only be "
+            + "used with complex instantiable types (Pojos, Lists, Maps)",
+                                                                  extensionParameter.getName(), NullSafe.class.getSimpleName(),
+                                                                  extensionParameter.getType().getName()));
+      }
+
+      if (!getType(parameter.getDeclaration().getType()).isAssignableFrom(getType(nullSafeType))) {
+        throw new IllegalParameterModelDefinitionException(format("Parameter '%s' is annotated with '@%s' of type '%s', but provided type '%s"
+            + "is not a subtype of the parameter's type",
+                                                                  extensionParameter.getName(), NullSafe.class.getSimpleName(),
+                                                                  extensionParameter.getType().getName(),
+                                                                  getType(nullSafeType).getName()));
+      }
+
+      parameter.withModelProperty(new NullSafeModelProperty(nullSafeType));
     }
   }
 

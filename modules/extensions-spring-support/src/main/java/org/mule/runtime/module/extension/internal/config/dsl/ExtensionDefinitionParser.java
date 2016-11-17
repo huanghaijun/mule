@@ -9,7 +9,6 @@ package org.mule.runtime.module.extension.internal.config.dsl;
 import static java.lang.String.format;
 import static java.time.Instant.ofEpochMilli;
 import static org.mule.metadata.internal.utils.MetadataTypeUtils.getDefaultValue;
-import static org.mule.metadata.java.api.utils.JavaTypeUtils.getGenericTypeAt;
 import static org.mule.metadata.java.api.utils.JavaTypeUtils.getType;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
 import static org.mule.runtime.api.meta.ExpressionSupport.NOT_SUPPORTED;
@@ -36,7 +35,6 @@ import org.mule.metadata.api.model.MetadataType;
 import org.mule.metadata.api.model.ObjectType;
 import org.mule.metadata.api.model.StringType;
 import org.mule.metadata.api.visitor.MetadataTypeVisitor;
-import org.mule.metadata.java.api.annotation.ClassInformationAnnotation;
 import org.mule.runtime.api.config.PoolingProfile;
 import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.api.meta.ExpressionSupport;
@@ -44,14 +42,12 @@ import org.mule.runtime.api.meta.model.ExtensionModel;
 import org.mule.runtime.api.meta.model.ModelProperty;
 import org.mule.runtime.api.meta.model.parameter.ParameterModel;
 import org.mule.runtime.api.tls.TlsContextFactory;
-import org.mule.runtime.core.api.Event;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.NestedProcessor;
 import org.mule.runtime.core.api.config.ConfigurationException;
 import org.mule.runtime.core.api.config.ThreadingProfile;
 import org.mule.runtime.core.api.processor.Processor;
 import org.mule.runtime.core.api.retry.RetryPolicyTemplate;
-import org.mule.runtime.core.util.ClassUtils;
 import org.mule.runtime.core.util.TemplateParser;
 import org.mule.runtime.core.util.ValueHolder;
 import org.mule.runtime.dsl.api.component.AttributeDefinition;
@@ -105,7 +101,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.joda.time.DateTime;
@@ -238,7 +233,14 @@ public abstract class ExtensionDefinitionParser {
           if (isNestedProcessor(objectType)) {
             parseNestedProcessor(parameter);
           } else {
-            parseObjectParameter(parameter, paramDsl);
+            if (!parsingContext.isRegistered(paramDsl.getElementName(), paramDsl.getNamespace())) {
+              parsingContext.registerObjectType(paramDsl.getElementName(), paramDsl.getNamespace(), objectType);
+              parseObjectParameter(parameter, paramDsl);
+            } else {
+              parseObject(getKey(parameter), parameter.getName(), objectType, parameter.getDefaultValue(),
+                          parameter.getExpressionSupport(), parameter.isRequired(), acceptsReferences(parameter),
+                          paramDsl, parameter.getModelProperties());
+            }
           }
         }
 
@@ -660,15 +662,15 @@ public abstract class ExtensionDefinitionParser {
    */
   protected void parseObjectParameter(ParameterModel parameterModel, DslElementSyntax paramDsl) {
     if (isContent(parameterModel)) {
-      parseFromTextExpression(parameterModel, paramDsl, () -> value -> resolverOf(
-                                                                                  parameterModel.getName(),
-                                                                                  parameterModel.getType(),
-                                                                                  value,
-                                                                                  parameterModel.getDefaultValue(),
-                                                                                  parameterModel.getExpressionSupport(),
-                                                                                  parameterModel.isRequired(),
-                                                                                  parameterModel.getModelProperties(),
-                                                                                  acceptsReferences(parameterModel)));
+      parseFromTextExpression(parameterModel, paramDsl,
+                              () -> value -> resolverOf(parameterModel.getName(),
+                                                        parameterModel.getType(),
+                                                        value,
+                                                        parameterModel.getDefaultValue(),
+                                                        parameterModel.getExpressionSupport(),
+                                                        parameterModel.isRequired(),
+                                                        parameterModel.getModelProperties(),
+                                                        acceptsReferences(parameterModel)));
     } else {
       parseObjectParameter(getKey(parameterModel), parameterModel.getName(), (ObjectType) parameterModel.getType(),
                            parameterModel.getDefaultValue(), parameterModel.getExpressionSupport(), parameterModel.isRequired(),
@@ -697,8 +699,7 @@ public abstract class ExtensionDefinitionParser {
     final String elementNamespace = elementDsl.getNamespace();
     final String elementName = elementDsl.getElementName();
 
-    if (elementDsl.supportsChildDeclaration() && !elementDsl.isWrapped()
-        && !parsingContext.isRegistered(elementName, elementNamespace)) {
+    if (elementDsl.supportsChildDeclaration() && !elementDsl.isWrapped()) {
       try {
         new ObjectTypeParameterParser(baseDefinitionBuilder.copy(), elementName, elementNamespace, type, getContextClassLoader(),
                                       dslResolver, parsingContext, muleContext).parse()

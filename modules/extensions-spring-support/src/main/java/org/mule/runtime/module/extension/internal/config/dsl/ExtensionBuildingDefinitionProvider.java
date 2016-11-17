@@ -18,7 +18,7 @@ import org.mule.metadata.api.model.MetadataType;
 import org.mule.metadata.api.model.ObjectType;
 import org.mule.metadata.api.model.UnionType;
 import org.mule.metadata.api.visitor.MetadataTypeVisitor;
-import org.mule.metadata.internal.utils.MetadataTypeUtils;
+import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.api.meta.model.ExtensionModel;
 import org.mule.runtime.api.meta.model.XmlDslModel;
 import org.mule.runtime.api.meta.model.config.ConfigurationModel;
@@ -28,7 +28,6 @@ import org.mule.runtime.api.meta.model.parameter.ParameterModel;
 import org.mule.runtime.api.meta.model.source.SourceModel;
 import org.mule.runtime.api.meta.model.util.IdempotentExtensionWalker;
 import org.mule.runtime.core.api.MuleContext;
-import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.core.api.config.ConfigurationException;
 import org.mule.runtime.core.api.context.MuleContextAware;
 import org.mule.runtime.dsl.api.component.ComponentBuildingDefinition;
@@ -232,8 +231,7 @@ public class ExtensionBuildingDefinitionProvider implements ComponentBuildingDef
       @Override
       public void visitObject(ObjectType objectType) {
         DslElementSyntax pojoDsl = dslElement.get();
-        if (pojoDsl.supportsTopLevelDeclaration() ||
-            (pojoDsl.supportsChildDeclaration() && pojoDsl.isWrapped()) ||
+        if (pojoDsl.supportsTopLevelDeclaration() || (pojoDsl.supportsChildDeclaration() && pojoDsl.isWrapped()) ||
             parsingContext.getAllSubTypes().contains(objectType)) {
 
           parseWith(new ObjectTypeParameterParser(definitionBuilder, objectType, extensionClassLoader, dslSyntaxResolver,
@@ -297,7 +295,6 @@ public class ExtensionBuildingDefinitionProvider implements ComponentBuildingDef
                                           ExtensionParsingContext parsingContext) {
 
     parameters.filter(ExtensionMetadataTypeUtils::isInstantiable)
-        .filter(MetadataTypeUtils::hasExposedFields)
         .forEach(subType -> registerTopLevelParameter(subType,
                                                       definitionBuilder,
                                                       extensionClassLoader,

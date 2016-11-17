@@ -17,6 +17,7 @@ import static org.mule.runtime.module.extension.internal.util.IntrospectionUtils
 import static org.mule.runtime.module.extension.internal.util.IntrospectionUtils.getMemberName;
 import static org.mule.runtime.module.extension.internal.util.IntrospectionUtils.getModelName;
 import static org.mule.runtime.module.extension.internal.util.MuleExtensionUtils.isNullSafe;
+import org.mule.metadata.api.model.MetadataType;
 import org.mule.runtime.api.meta.model.EnrichableModel;
 import org.mule.runtime.api.meta.model.parameter.ParameterModel;
 import org.mule.runtime.api.meta.model.parameter.ParameterizedModel;
@@ -28,6 +29,7 @@ import org.mule.runtime.dsl.api.component.AbstractAnnotatedObjectFactory;
 import org.mule.runtime.dsl.api.component.ObjectFactory;
 import org.mule.runtime.extension.api.util.NameUtils;
 import org.mule.runtime.module.extension.internal.introspection.ParameterGroup;
+import org.mule.runtime.module.extension.internal.model.property.NullSafeModelProperty;
 import org.mule.runtime.module.extension.internal.model.property.ParameterGroupModelProperty;
 import org.mule.runtime.module.extension.internal.runtime.resolver.CollectionValueResolver;
 import org.mule.runtime.module.extension.internal.runtime.resolver.MapValueResolver;
@@ -108,8 +110,9 @@ public abstract class AbstractExtensionObjectFactory<T> extends AbstractAnnotate
           }
 
           if (isNullSafe(p)) {
-            resolver = resolver != null ? resolver : new StaticValueResolver<>(null);
-            resolver = NullSafeValueResolverWrapper.of(p.getType(), resolver, p.getModelProperties(), muleContext);
+            MetadataType defaultType = p.getModelProperty(NullSafeModelProperty.class).get().defaultType();
+            ValueResolver<?> delegate = resolver != null ? resolver : new StaticValueResolver<>(null);
+            resolver = NullSafeValueResolverWrapper.of(defaultType, delegate, p.getModelProperties(), muleContext);
           }
 
           if (resolver != null) {
