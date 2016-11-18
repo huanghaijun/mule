@@ -14,7 +14,7 @@
                 <jmsn:jndi-connection-factory connectionFactoryJndiName="ConnectionFactory"
                                              lookupDestination="NEVER" >
                     <jmsn:name-resolver-builder
-                            jndiInitialFactory="org.apache.activemq.jndi.ActiveMQInitialContextFactory"
+                            jndiInitialContextFactory="org.apache.activemq.jndi.ActiveMQInitialContextFactory"
                             jndiProviderUrl="vm://localhost?broker.persistent=false&amp;broker.useJmx=false"/>
                 </jmsn:jndi-connection-factory>
             </jmsn:connection-factory>
@@ -28,7 +28,7 @@
                 <jmsn:jndi-connection-factory connectionFactoryJndiName="ConnectionFactory"
                                              lookupDestination="NEVER">
                     <jmsn:name-resolver-builder
-                            jndiInitialFactory="org.apache.activemq.jndi.ActiveMQInitialContextFactory"
+                            jndiInitialContextFactory="org.apache.activemq.jndi.ActiveMQInitialContextFactory"
                             jndiProviderUrl="vm://localhost?broker.persistent=false&amp;broker.useJmx=false"/>
                 </jmsn:jndi-connection-factory>
             </jmsn:connection-factory>

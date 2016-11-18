@@ -27,7 +27,9 @@ import javax.jms.Message;
 import org.slf4j.Logger;
 
 /**
- * //TODO
+ * Utility class for Jms Operations
+ *
+ * @since 4.0
  */
 class JmsOperationUtils {
 

@@ -7,13 +7,10 @@
 package org.mule.extensions.jms.test.topic;
 
 import static java.util.Arrays.asList;
-import org.mule.runtime.core.api.message.InternalMessage;
 import org.mule.test.runner.RunnerDelegateTo;
 
 import java.util.Collection;
-import java.util.concurrent.Future;
 
-import org.junit.Test;
 import org.junit.runners.Parameterized;
 
 

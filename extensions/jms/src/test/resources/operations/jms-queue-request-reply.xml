@@ -14,7 +14,7 @@
     </flow>
 
     <flow name="request-reply">
-        <jmsn:request-reply config-ref="producer" destination="#[flowVars.requestDestination]">
+        <jmsn:request-reply config-ref="producer" destination="#[flowVars.requestDestination]" maximumWaitTime="1000">
             <jmsn:message-builder>
                 <jmsn:content>#[payload]</jmsn:content>
                 <jmsn:reply-to destination="#[flowVars.replyToDestination]"/>
@@ -23,7 +23,7 @@
     </flow>
 
     <flow name="request-listener">
-        <jmsn:consume config-ref="consumer" destination="#[flowVars.requestDestination]"/>
+        <jmsn:consume config-ref="consumer" destination="#[flowVars.requestDestination]" maximumWaitTime="1000"/>
     </flow>
 
 </mule>

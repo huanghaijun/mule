@@ -9,14 +9,7 @@ package org.mule.extensions.jms.test;
 import org.mule.functional.junit4.MuleArtifactFunctionalTestCase;
 import org.mule.test.runner.ArtifactClassLoaderRunnerConfig;
 
-import javax.jms.ConnectionFactory;
-
-/**
- * //TODO
- */
-@ArtifactClassLoaderRunnerConfig(
-    exportPluginClasses = {ConnectionFactory.class})
-//, JmsConsumerConfig.class, JmsProducerConfig.class, JmsBaseConfig.class})
+@ArtifactClassLoaderRunnerConfig(plugins = {"com.mulesoft.weave:mule-plugin-weave"})
 public abstract class JmsAbstractTestCase extends MuleArtifactFunctionalTestCase {
 
 

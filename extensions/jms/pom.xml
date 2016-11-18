@@ -23,56 +23,15 @@
         <activemq.version>5.14.1</activemq.version>
     </properties>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>${mavenCompilerVersion}</version>
-                <configuration>
-                    <encoding>ISO-8859-1</encoding>
-                    <fork>true</fork>
-                    <maxmem>512m</maxmem>
-                    <source>${javaVersion}</source>
-                    <target>${javaVersion}</target>
-                    <proc>none</proc>
-                    <!-- Slightly faster builds, see https://jira.codehaus.org/browse/MCOMPILER-209 -->
-                    <useIncrementalCompilation>false</useIncrementalCompilation>
-                    <compilerArgs>
-                        <arg>-parameters</arg>
-                    </compilerArgs>
-                    <testCompilerArgument>-parameters</testCompilerArgument>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>com.marvinformatics.formatter</groupId>
-                <artifactId>formatter-maven-plugin</artifactId>
-                <version>${javaFormatter.plugin.version}</version>
-                <configuration>
-                    <compilerCompliance>${javaVersion}</compilerCompliance>
-                    <compilerSource>${javaVersion}</compilerSource>
-                    <compilerTargetPlatform>${javaVersion}</compilerTargetPlatform>
-                    <configFile>${basedir}/${formatterConfigPath}</configFile>
-                    <configJsFile>${basedir}/${formatterConfigPath}</configJsFile>
-                    <lineEnding>LF</lineEnding>
-                    <aggregator>false</aggregator>
-                    <executionRoot>true</executionRoot>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>format</goal>
-                        </goals>
-                        <configuration>
-                            <skipFormatting>${skipVerifications}</skipFormatting>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
     <dependencies>
+        <dependency>
+            <groupId>org.mule.services</groupId>
+            <artifactId>mule-service-scheduler</artifactId>
+            <version>${project.version}</version>
+            <classifier>mule-service</classifier>
+            <scope>provided</scope>
+        </dependency>
+
         <dependency>
             <groupId>javax.jms</groupId>
             <artifactId>javax.jms-api</artifactId>
@@ -120,11 +79,10 @@
         </dependency>
 
         <dependency>
-            <groupId>org.mule.services</groupId>
-            <artifactId>mule-service-scheduler</artifactId>
-            <version>${project.version}</version>
+            <groupId>com.mulesoft.weave</groupId>
+            <artifactId>mule-plugin-weave</artifactId>
             <scope>provided</scope>
-            <classifier>mule-service</classifier>
         </dependency>
+
     </dependencies>
 </project>

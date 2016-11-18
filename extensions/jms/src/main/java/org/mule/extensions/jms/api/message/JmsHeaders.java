@@ -51,7 +51,7 @@ public interface JmsHeaders {
    * A message's delivery time is the earliest time when a provider may make the message visible
    * on the target destination and available for delivery to consumers.
    *
-   * @return the message's delivery time or {@code zero} if no {@code deliveryDelay} was set //TODO REVIEW CONVENTION IN 2.0
+   * @return the message's delivery time or {@code zero} if no {@code deliveryDelay} was set
    */
   long getJMSDeliveryTime();
 

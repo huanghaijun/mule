@@ -11,7 +11,10 @@ import static com.google.common.collect.ImmutableList.of;
 import java.util.List;
 
 /**
- * //TODO
+ * Declaration of the predefined names for JMSX properties,
+ * according to JMS spec.
+ *
+ * @since 4.0
  */
 public class JMSXDefinedPropertiesNames {
 
