@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 @Alias("generic")
 public class GenericConnectionProvider extends BaseConnectionProvider {
 
-  private static final Logger logger = LoggerFactory.getLogger(BaseConnectionProvider.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(BaseConnectionProvider.class);
 
   /**
    * a JMS {@link ConnectionFactory} implementation
@@ -59,8 +59,8 @@ public class GenericConnectionProvider extends BaseConnectionProvider {
       return;
     }
 
-    if (logger.isDebugEnabled()) {
-      logger.debug("Creating JMSSupport using a Jndi discovered Connection Factory");
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("Creating JMSSupport using a Jndi discovered Connection Factory");
     }
     JndiConnectionFactory jndiConnectionFactory = (JndiConnectionFactory) this.connectionFactory;
 

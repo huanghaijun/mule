@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
  */
 public class JmsResultFactory {
 
-  private static final Logger logger = LoggerFactory.getLogger(JmsResultFactory.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(JmsResultFactory.class);
 
   /**
    *
@@ -60,16 +60,16 @@ public class JmsResultFactory {
       throws IOException, JMSException {
 
     if (jmsMessage == null) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("Resulting JMS Message was [null], creating an empty result");
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("Resulting JMS Message was [null], creating an empty result");
       }
 
       return Result.<Object, JmsAttributes>builder().output(null).build();
     }
 
 
-    if (logger.isDebugEnabled()) {
-      logger.debug(format("Creating Result: specification:[%s], type:[%s], contentType:[%s], encoding:[%s]",
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug(format("Creating Result: specification:[%s], type:[%s], contentType:[%s], encoding:[%s]",
                           specification.getName(), jmsMessage.getClass().getSimpleName(), contentType, encoding));
     }
 
@@ -100,8 +100,8 @@ public class JmsResultFactory {
       return null;
     }
 
-    if (logger.isDebugEnabled()) {
-      logger.debug("Message type received is: " + message.getClass().getSimpleName());
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("Message type received is: " + message.getClass().getSimpleName());
     }
     return toObject(message, specification, encoding);
   }
@@ -128,8 +128,8 @@ public class JmsResultFactory {
         jmsHeadersBuilder.setType(value);
       }
     } catch (JMSException e) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("An error occurred while retrieving the JMSType: %s", e.getMessage());
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("An error occurred while retrieving the JMSType: %s", e.getMessage());
       }
     }
   }
@@ -139,8 +139,8 @@ public class JmsResultFactory {
       long value = jmsMessage.getJMSTimestamp();
       jmsHeadersBuilder.setTimestamp(value);
     } catch (JMSException e) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("An error occurred while retrieving the JMSTimestamp property: %s", e.getMessage());
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("An error occurred while retrieving the JMSTimestamp property: %s", e.getMessage());
       }
     }
   }
@@ -152,8 +152,8 @@ public class JmsResultFactory {
         jmsHeadersBuilder.setReplyTo(getDestination(replyTo));
       }
     } catch (JMSException e) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("An error occurred while retrieving the JMSReplyTo property: %s", e.getMessage());
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("An error occurred while retrieving the JMSReplyTo property: %s", e.getMessage());
       }
     }
   }
@@ -163,8 +163,8 @@ public class JmsResultFactory {
       boolean value = jmsMessage.getJMSRedelivered();
       jmsHeadersBuilder.setRedelivered(value);
     } catch (JMSException e) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("An error occurred while retrieving the JMSRedelivered property: %s", e.getMessage());
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("An error occurred while retrieving the JMSRedelivered property: %s", e.getMessage());
       }
     }
   }
@@ -174,8 +174,8 @@ public class JmsResultFactory {
       int value = jmsMessage.getJMSPriority();
       jmsHeadersBuilder.setPriority(value);
     } catch (JMSException e) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("An error occurred while retrieving the JMSPriority property: %s", e.getMessage());
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("An error occurred while retrieving the JMSPriority property: %s", e.getMessage());
       }
     }
   }
@@ -188,8 +188,8 @@ public class JmsResultFactory {
         //TODO here mule sets the MULE_MESSAGE_ID see if we have to do something
       }
     } catch (JMSException e) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("An error occurred while retrieving the JMSMessageID property: %s", e.getMessage());
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("An error occurred while retrieving the JMSMessageID property: %s", e.getMessage());
       }
     }
   }
@@ -199,8 +199,8 @@ public class JmsResultFactory {
       long value = jmsMessage.getJMSExpiration();
       jmsHeadersBuilder.setExpiration(value);
     } catch (JMSException e) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("An error occurred while retrieving the JMSExpiration property: %s", e.getMessage());
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("An error occurred while retrieving the JMSExpiration property: %s", e.getMessage());
       }
     }
   }
@@ -212,8 +212,8 @@ public class JmsResultFactory {
         jmsHeadersBuilder.setDestination(getDestination(value));
       }
     } catch (JMSException e) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("An error occurred while retrieving the JMSDestination property: %s", e.getMessage());
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("An error occurred while retrieving the JMSDestination property: %s", e.getMessage());
       }
     }
   }
@@ -229,8 +229,8 @@ public class JmsResultFactory {
       int value = jmsMessage.getJMSDeliveryMode();
       jmsHeadersBuilder.setDeliveryMode(value);
     } catch (JMSException e) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("An error occurred while retrieving the JMSDeliveryMode property: %s", e.getMessage());
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("An error occurred while retrieving the JMSDeliveryMode property: %s", e.getMessage());
       }
     }
   }
@@ -243,8 +243,8 @@ public class JmsResultFactory {
         //TODO previously here the MULE_CORRELATION_ID was set also, see what to do with that.
       }
     } catch (JMSException e) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("An error occurred while retrieving the JMSCorrelationID property: %s", e.getMessage());
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("An error occurred while retrieving the JMSCorrelationID property: %s", e.getMessage());
       }
     }
   }

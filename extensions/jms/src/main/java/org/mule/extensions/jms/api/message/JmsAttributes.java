@@ -9,8 +9,6 @@ package org.mule.extensions.jms.api.message;
 import org.mule.extensions.jms.api.config.AckMode;
 import org.mule.runtime.api.message.Attributes;
 
-import java.io.Serializable;
-
 import javax.jms.Message;
 
 /**
@@ -20,7 +18,7 @@ import javax.jms.Message;
  *
  * @since 4.0
  */
-public interface JmsAttributes extends Serializable, Attributes {
+public interface JmsAttributes extends Attributes {
 
   /**
    * @return the {@link Message} properties

@@ -49,7 +49,7 @@ import org.slf4j.Logger;
  */
 public class Jms20Support implements JmsSupport {
 
-  private Logger logger = getLogger(Jms20Support.class);
+  private Logger LOGGER = getLogger(Jms20Support.class);
 
   private final Function<String, Optional<Destination>> jndiObjectSupplier;
   private final LookupJndiDestination lookupJndiDestination;
@@ -154,8 +154,8 @@ public class Jms20Support implements JmsSupport {
         return destination.get();
 
       } else if (getLookupJndiDestination().equals(ALWAYS)) {
-        if (logger.isDebugEnabled()) {
-          logger.debug(format("Failed to find JNDI destination [%s], but destination origin was forced as ALWAYS use JNDI."
+        if (LOGGER.isDebugEnabled()) {
+          LOGGER.debug(format("Failed to find JNDI destination [%s], but destination origin was forced as ALWAYS use JNDI."
               + " We have to stop execution.", name));
 
         }
@@ -164,22 +164,22 @@ public class Jms20Support implements JmsSupport {
       }
     }
 
-    if (logger.isDebugEnabled()) {
-      logger.debug(format("Using non-JNDI destination [%s], will create one now", name));
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug(format("Using non-JNDI destination [%s], will create one now", name));
     }
 
     checkArgument(session != null, "Session cannot be null when creating a destination");
     checkArgument(!isBlank(name), "Destination name cannot be blank when creating a destination");
 
     if (topic) {
-      if (logger.isDebugEnabled()) {
-        logger.debug(format("Creating Topic Destination with name: [%s]", name));
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug(format("Creating Topic Destination with name: [%s]", name));
       }
 
       return session.createTopic(name);
     } else {
-      if (logger.isDebugEnabled()) {
-        logger.debug(format("Creating Queue Destination with name: [%s]", name));
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug(format("Creating Queue Destination with name: [%s]", name));
       }
       return session.createQueue(name);
     }
@@ -187,9 +187,9 @@ public class Jms20Support implements JmsSupport {
 
   protected Optional<Destination> createDestinationFromJndi(String name) throws JMSException {
     Optional<Destination> dest = getJndiDestination(name);
-    if (logger.isDebugEnabled()) {
+    if (LOGGER.isDebugEnabled()) {
       String message = dest.isPresent() ? "located in JNDI, will use it now" : "not found using JNDI";
-      logger.debug(format("Destination [%s] %s", name, message));
+      LOGGER.debug(format("Destination [%s] %s", name, message));
     }
 
     return dest;
@@ -197,15 +197,15 @@ public class Jms20Support implements JmsSupport {
 
   protected Optional<Destination> getJndiDestination(String name) {
     try {
-      if (logger.isDebugEnabled()) {
-        logger.debug(format("Looking up %s from JNDI", name));
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug(format("Looking up %s from JNDI", name));
       }
 
       return getJndiObjectSupplier().apply(name);
 
     } catch (Exception e) {
-      if (logger.isDebugEnabled()) {
-        logger.debug(format("Failed to look up destination [%s]: ", name), e);
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug(format("Failed to look up destination [%s]: ", name), e);
       }
 
       return empty();
@@ -219,8 +219,8 @@ public class Jms20Support implements JmsSupport {
   public Destination createTemporaryDestination(Session session, boolean isTopic) throws JMSException {
     checkArgument(session != null, "Session cannot be null when creating a destination");
 
-    if (logger.isDebugEnabled()) {
-      logger.debug(format("Creating temporary destination of type: [%s]", isTopic ? "Topic" : "Queue"));
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug(format("Creating temporary destination of type: [%s]", isTopic ? "Topic" : "Queue"));
     }
 
     return isTopic ? session.createTemporaryTopic() : session.createTemporaryQueue();
@@ -233,8 +233,8 @@ public class Jms20Support implements JmsSupport {
   public void send(MessageProducer producer, Message message, Destination dest, boolean persistent, int priority,
                    long ttl, boolean topic)
       throws JMSException {
-    if (logger.isDebugEnabled()) {
-      logger.debug(format("Sending message to [%s], persistent:[%s], with priority:[%s] and ttl:[%s]",
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug(format("Sending message to [%s], persistent:[%s], with priority:[%s] and ttl:[%s]",
                           dest instanceof Queue ? ((Queue) dest).getQueueName() : ((Topic) dest).getTopicName(),
                           persistent, priority, ttl));
     }

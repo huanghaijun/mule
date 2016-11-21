@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 @ExclusiveOptionals(isOneRequired = true)
 public class JndiNameResolverProvider {
 
-  private static final Logger logger = LoggerFactory.getLogger(JndiNameResolverProvider.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(JndiNameResolverProvider.class);
 
   /**
    * Reference to a custom {@link JndiNameResolver} implementation
@@ -50,9 +50,9 @@ public class JndiNameResolverProvider {
   }
 
   JndiNameResolver createDefaultJndiResolver() throws InitialisationException {
-    if (logger.isDebugEnabled()) {
-      logger.debug("Creating default JndiNameResolver");
-      logger.debug(format("Provider Url: [%s], InitialContextFactory: [%s]",
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("Creating default JndiNameResolver");
+      LOGGER.debug(format("Provider Url: [%s], InitialContextFactory: [%s]",
                           nameResolverBuilder.getJndiProviderUrl(), nameResolverBuilder.getJndiInitialContextFactory()));
     }
 

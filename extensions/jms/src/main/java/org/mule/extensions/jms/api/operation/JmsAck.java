@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
  */
 public class JmsAck {
 
-  private static final Logger logger = LoggerFactory.getLogger(JmsAck.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(JmsAck.class);
 
   /**
    * Allows the user to perform an ACK when the {@link AckMode#MANUAL} mode is elected while consuming the {@link Message}.
@@ -53,14 +53,14 @@ public class JmsAck {
 
     try {
 
-      if (logger.isDebugEnabled()) {
-        logger.debug("Performing ACK on session: " + ackId);
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("Performing ACK on session: " + ackId);
       }
 
       connection.doAck(ackId);
 
     } catch (Exception e) {
-      logger.error("An error occurred while acking a message: ", e);
+      LOGGER.error("An error occurred while acking a message: ", e);
 
       throw new JmsExtensionException(createStaticMessage("An error occurred while trying to perform an ACK: "), e);
     }

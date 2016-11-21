@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
  */
 public class Jms11Support extends Jms20Support {
 
-  private Logger logger = LoggerFactory.getLogger(Jms11Support.class);
+  private Logger LOGGER = LoggerFactory.getLogger(Jms11Support.class);
 
   public Jms11Support() {
     super();
@@ -83,8 +83,8 @@ public class Jms11Support extends Jms20Support {
   public void send(MessageProducer producer, Message message, Destination dest, boolean persistent, int priority,
                    long ttl, boolean topic)
       throws JMSException {
-    if (logger.isDebugEnabled()) {
-      logger.debug(format("Sending message to [%s], persistent:[%s], with priority:[%s] and ttl:[%s]",
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug(format("Sending message to [%s], persistent:[%s], with priority:[%s] and ttl:[%s]",
                           dest instanceof Queue ? ((Queue) dest).getQueueName() : ((Topic) dest).getTopicName(),
                           persistent, priority, ttl));
     }

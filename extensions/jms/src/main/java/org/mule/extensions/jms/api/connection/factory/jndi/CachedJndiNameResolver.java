@@ -59,8 +59,8 @@ public class CachedJndiNameResolver extends AbstractJndiNameResolver {
     Object result = null;
     if (name != null) {
       result = cache.get(name);
-      if (logger.isDebugEnabled()) {
-        logger.debug(format("Object: " + name + " was %sfound in the cache", (result == null) ? "not " : ""));
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug(format("Object: " + name + " was %sfound in the cache", (result == null) ? "not " : ""));
       }
     }
 

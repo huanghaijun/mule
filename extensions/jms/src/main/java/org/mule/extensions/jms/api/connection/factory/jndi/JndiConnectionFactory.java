@@ -38,7 +38,7 @@ import org.springframework.jms.connection.DelegatingConnectionFactory;
  */
 public class JndiConnectionFactory extends DelegatingConnectionFactory implements Lifecycle {
 
-  private static final Logger logger = LoggerFactory.getLogger(JndiConnectionFactory.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(JndiConnectionFactory.class);
 
   /**
    * Name of the ConnectionFactory to be discovered using Jndi
@@ -67,8 +67,8 @@ public class JndiConnectionFactory extends DelegatingConnectionFactory implement
   public java.util.Optional<Destination> getJndiDestination(String name) {
 
     try {
-      if (logger.isDebugEnabled()) {
-        logger.debug(format("Looking up %s from JNDI", name));
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug(format("Looking up %s from JNDI", name));
       }
 
       Object temp = lookupFromJndi(name);
@@ -76,8 +76,8 @@ public class JndiConnectionFactory extends DelegatingConnectionFactory implement
       return temp instanceof Destination ? of((Destination) temp) : empty();
 
     } catch (NamingException e) {
-      if (logger.isDebugEnabled()) {
-        logger.debug(format("Failed to look up destination [%s]: ", name), e);
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug(format("Failed to look up destination [%s]: ", name), e);
       }
 
       return empty();
@@ -115,7 +115,7 @@ public class JndiConnectionFactory extends DelegatingConnectionFactory implement
 
   @Override
   public void dispose() {
-    disposeIfNeeded(getJndiNameResolver(), logger);
+    disposeIfNeeded(getJndiNameResolver(), LOGGER);
   }
 
   private void setupNameResolver() throws InitialisationException {
@@ -134,8 +134,8 @@ public class JndiConnectionFactory extends DelegatingConnectionFactory implement
       return getJndiNameResolver().lookup(jndiName);
     } catch (NamingException e) {
       //TODO MULE-10959: mark transaction for rollback
-      if (logger.isDebugEnabled()) {
-        logger.debug(format("Failed to resolve lookup for name [%s]", jndiName), e);
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug(format("Failed to resolve lookup for name [%s]", jndiName), e);
       }
       throw e;
     }

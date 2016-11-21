@@ -6,10 +6,14 @@
  */
 package org.mule.extensions.jms.api.config;
 
+import static javax.jms.Session.AUTO_ACKNOWLEDGE;
+import static javax.jms.Session.CLIENT_ACKNOWLEDGE;
+import static javax.jms.Session.DUPS_OK_ACKNOWLEDGE;
+import static javax.jms.Session.SESSION_TRANSACTED;
+
 import javax.jms.Session;
 
 /**
- *
  * Declares the kind of Acknowledgement mode supported.
  * If a session is transacted, message acknowledgment is handled automatically by {@code commit},
  * and recovery is handled automatically by {@code rollback}.
@@ -25,8 +29,7 @@ import javax.jms.Session;
  */
 public enum AckMode {
 
-  NONE(0), AUTO(Session.AUTO_ACKNOWLEDGE), MANUAL(Session.CLIENT_ACKNOWLEDGE), DUPS_OK(Session.DUPS_OK_ACKNOWLEDGE), TRANSACTED(
-      Session.SESSION_TRANSACTED);
+  NONE(0), AUTO(AUTO_ACKNOWLEDGE), MANUAL(CLIENT_ACKNOWLEDGE), DUPS_OK(DUPS_OK_ACKNOWLEDGE), TRANSACTED(SESSION_TRANSACTED);
 
   private final int ackMode;
 

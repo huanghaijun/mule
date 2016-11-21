@@ -43,7 +43,7 @@ public class SimpleJndiNameResolver extends AbstractJndiNameResolver {
       try {
         jndiContext.close();
       } catch (NamingException e) {
-        logger.error("Jms connector failed to dispose properly: ", e);
+        LOGGER.error("Jms connector failed to dispose properly: ", e);
       } finally {
         jndiContext = null;
       }

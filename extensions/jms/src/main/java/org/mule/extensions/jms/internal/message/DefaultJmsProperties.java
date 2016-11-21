@@ -28,8 +28,6 @@ public class DefaultJmsProperties implements JmsMessageProperties {
 
   private JmsxProperties jmsxProperties;
 
-
-
   public DefaultJmsProperties(Map<String, Object> messageProperties) {
     allPropertiesMap = copyOf(messageProperties);
     JmsxPropertiesBuilder jmsxPropertiesBuilder = JmsxPropertiesBuilder.create();

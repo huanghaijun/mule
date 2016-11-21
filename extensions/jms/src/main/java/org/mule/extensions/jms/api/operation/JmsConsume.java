@@ -28,6 +28,7 @@ import org.mule.runtime.extension.api.annotation.param.UseConfig;
 import org.mule.runtime.extension.api.annotation.param.display.Summary;
 import org.mule.runtime.extension.api.runtime.operation.Result;
 
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import javax.jms.Destination;
@@ -44,9 +45,9 @@ import org.slf4j.LoggerFactory;
  */
 public class JmsConsume {
 
-  private static final Logger logger = LoggerFactory.getLogger(JmsConsume.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(JmsConsume.class);
 
-  private JmsResultFactory messageFactory = new JmsResultFactory();
+  private JmsResultFactory resultFactory = new JmsResultFactory();
 
   /**
    * Operation that allows the user to consume a single {@link Message} from a given {@link Destination}.
@@ -74,58 +75,41 @@ public class JmsConsume {
                                                @Optional String selector,
                                                @Optional String contentType,
                                                @Optional String encoding,
-                                               @Optional(defaultValue = "10000") Long maximumWaitTime)
+                                               @Optional(defaultValue = "10000") Long maximumWaitTime,
+                                               @Optional(defaultValue = "MILLISECONDS") TimeUnit waitTimeUnit)
       throws JmsExtensionException {
-
 
     consumerType = resolveOverride(config.getConsumerType(), consumerType);
     ackMode = resolveOverride(config.getAckMode(), ackMode);
     selector = resolveOverride(config.getSelector(), selector);
+    contentType = resolveOverride(config.getContentType(), contentType);
+    encoding = resolveOverride(config.getEncoding(), encoding);
 
-    JmsSession session = null;
-    MessageConsumer consumer = null;
     try {
-
-      if (logger.isDebugEnabled()) {
-        logger.debug("Begin Consume");
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("Begin Consume");
       }
-
-      session = connection.createSession(ackMode, consumerType.isTopic());
 
       JmsSupport jmsSupport = connection.getJmsSupport();
+      JmsSession session = connection.createSession(ackMode, consumerType.isTopic());
       Destination jmsDestination = jmsSupport.createDestination(session.get(), destination, consumerType.isTopic());
 
-      consumer = jmsSupport.createConsumer(session.get(), jmsDestination,
-                                           resolveOverride(config.getSelector(), selector),
-                                           consumerType);
+      MessageConsumer consumer = connection.createConsumer(session.get(), jmsDestination, selector, consumerType);
 
-      if (logger.isDebugEnabled()) {
-        logger.debug("Consuming Message");
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("Consuming Message");
       }
-      Message received = resolveConsumeMessage(maximumWaitTime, consumer).get();
 
-      evaluateMessageAck(connection, ackMode, session, received, logger);
+      Message received = resolveConsumeMessage(waitTimeUnit.toMillis(maximumWaitTime), consumer).get();
 
-      return messageFactory.createResult(received, jmsSupport.getSpecification(),
-                                         resolveOverride(config.getContentType(), contentType),
-                                         resolveOverride(config.getEncoding(), encoding),
-                                         session.getAckId());
+      evaluateMessageAck(connection, ackMode, session, received, LOGGER);
+
+      return resultFactory.createResult(received, jmsSupport.getSpecification(), contentType, encoding, session.getAckId());
 
     } catch (Exception e) {
-      logger.error("An error occurred while consuming a message: ", e);
+      LOGGER.error("An error occurred while consuming a message: ", e);
 
       throw new JmsExtensionException(createStaticMessage("An error occurred while consuming a message: "), e);
-
-    } finally {
-      if (logger.isDebugEnabled()) {
-        logger.debug("Closing Producer");
-      }
-      connection.closeQuietly(consumer);
-
-      if (logger.isDebugEnabled()) {
-        logger.debug("Closing Session");
-      }
-      connection.closeQuietly(session);
     }
   }
 

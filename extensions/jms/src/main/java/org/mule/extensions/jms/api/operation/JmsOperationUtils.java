@@ -54,17 +54,17 @@ class JmsOperationUtils {
   }
 
   static void evaluateMessageAck(@Connection JmsConnection connection, @Optional AckMode ackMode, JmsSession session,
-                                 Message received, Logger logger)
+                                 Message received, Logger LOGGER)
       throws JMSException {
     if (ackMode.equals(NONE)) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("Automatically performing an ACK over the message, since AckMode was NONE");
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("Automatically performing an ACK over the message, since AckMode was NONE");
       }
       received.acknowledge();
 
     } else if (ackMode.equals(MANUAL)) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("Registering pending ACK on session: " + session.getAckId());
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("Registering pending ACK on session: " + session.getAckId());
       }
       connection.registerMessageForAck(session.getAckId(), received);
     }

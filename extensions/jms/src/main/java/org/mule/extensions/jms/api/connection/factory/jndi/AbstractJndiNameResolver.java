@@ -7,6 +7,7 @@
 package org.mule.extensions.jms.api.connection.factory.jndi;
 
 import static org.mule.runtime.api.util.Preconditions.checkArgument;
+import static org.slf4j.LoggerFactory.getLogger;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.InitialisationException;
 
@@ -18,8 +19,7 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.naming.spi.InitialContextFactory;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
 
 /**
  * Base class for implementing a custom {@link JndiNameResolver}
@@ -28,7 +28,7 @@ import org.apache.commons.logging.LogFactory;
  */
 abstract class AbstractJndiNameResolver implements JndiNameResolver {
 
-  protected final Log logger = LogFactory.getLog(getClass());
+  protected final Logger LOGGER = getLogger(getClass());
 
   private String jndiProviderUrl;
   private String jndiInitialFactory;

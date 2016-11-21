@@ -16,6 +16,7 @@ import static org.mule.runtime.api.connection.ConnectionValidationResult.success
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.disposeIfNeeded;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.initialiseIfNeeded;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.stopIfNeeded;
+import static org.slf4j.LoggerFactory.getLogger;
 import org.mule.extensions.jms.api.connection.JmsConnection;
 import org.mule.extensions.jms.api.connection.JmsSpecification;
 import org.mule.extensions.jms.api.connection.caching.CachingStrategy;
@@ -46,7 +47,6 @@ import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Base implementation of a {@link PoolingConnectionProvider} for {@link JmsConnection}s
@@ -55,7 +55,7 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class BaseConnectionProvider implements PoolingConnectionProvider<JmsConnection>, Initialisable, Disposable {
 
-  private static final Logger logger = LoggerFactory.getLogger(BaseConnectionProvider.class);
+  private static final Logger LOGGER = getLogger(BaseConnectionProvider.class);
 
   @ParameterGroup
   private GenericConnectionParameters connectionParameters;
@@ -65,29 +65,35 @@ public abstract class BaseConnectionProvider implements PoolingConnectionProvide
   @NullSafe(defaultImplementingType = DefaultCachingStrategy.class)
   private CachingStrategy cachingStrategy;
 
+
+  /**
+   * Used to ignore handling of ExceptionListener#onException when in the process of disconnecting
+   */
+  private AtomicBoolean disconnecting = new AtomicBoolean(false);
+
   private JmsSupport jmsSupport;
   private ConnectionFactory jmsConnectionFactory;
   private boolean isCacheEnabled = false;
 
   /**
-   * Used to ignore handling of ExceptionListener#onException when in the process of disconnecting
+   * Template method for obtaining the {@link ConnectionFactory} to be used for creating the {@link JmsConnection}s
+   * @return an instance of {@link ConnectionFactory} to be used for creating the {@link JmsConnection}s
+   * @throws Exception if an error occurs while creting the {@link ConnectionFactory}
    */
-  protected AtomicBoolean disconnecting = new AtomicBoolean(false);
-
-  public abstract ConnectionFactory getConnectionFactory();
+  public abstract ConnectionFactory getConnectionFactory() throws Exception;
 
   @Override
   public void initialise() throws InitialisationException {
-    if (logger.isDebugEnabled()) {
-      logger.debug(format("Executing initialise for [%s]", getClass().getName()));
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug(format("Executing initialise for [%s]", getClass().getName()));
     }
     try {
       createJmsSupport();
       initialiseConnectionFactory();
 
     } catch (Exception e) {
-      if (logger.isDebugEnabled()) {
-        logger.debug(format("Failed to initialise [%s]: ", getClass().getName()), e);
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug(format("Failed to initialise [%s]: ", getClass().getName()), e);
       }
       throw new InitialisationException(e, this);
     }
@@ -95,8 +101,8 @@ public abstract class BaseConnectionProvider implements PoolingConnectionProvide
 
   @Override
   public JmsConnection connect() throws ConnectionException {
-    if (logger.isDebugEnabled()) {
-      logger.debug("Connection Started");
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("Connection Started");
     }
 
     disconnecting.set(false);
@@ -112,13 +118,13 @@ public abstract class BaseConnectionProvider implements PoolingConnectionProvide
         stopIfNeeded(jmsConnectionFactory);
 
       } catch (MuleException factoryStopException) {
-        if (logger.isDebugEnabled()) {
-          logger.debug("Failed to reset cached connection: ", factoryStopException);
+        if (LOGGER.isDebugEnabled()) {
+          LOGGER.debug("Failed to reset cached connection: ", factoryStopException);
         }
       }
 
-      if (logger.isDebugEnabled()) {
-        logger.debug("Failed create connection: ", e);
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("Failed create connection: ", e);
       }
 
       throw new ConnectionException(e);
@@ -127,8 +133,8 @@ public abstract class BaseConnectionProvider implements PoolingConnectionProvide
 
   @Override
   public void disconnect(JmsConnection jmsConnection) {
-    if (logger.isDebugEnabled()) {
-      logger.debug("Disconnection Started");
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("Disconnection Started");
     }
     // This invocations will be ignored when using a CachingConnectionFactory,
     // since a single connection is cached
@@ -138,8 +144,8 @@ public abstract class BaseConnectionProvider implements PoolingConnectionProvide
   }
 
   protected void doStop(JmsConnection jmsConnection) {
-    if (logger.isDebugEnabled()) {
-      logger.debug(format("Perform doStop: [%s]", getClass().getName()));
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug(format("Perform doStop: [%s]", getClass().getName()));
     }
 
     try {
@@ -147,29 +153,29 @@ public abstract class BaseConnectionProvider implements PoolingConnectionProvide
     } catch (Exception e) {
       // this exception may be thrown when the broker is shut down, but the
       // stop process should continue all the same
-      logger.warn("Jms connection failed to stop properly: ", e);
+      LOGGER.warn("Jms connection failed to stop properly: ", e);
     }
   }
 
   protected void doClose(JmsConnection jmsConnection) {
-    if (logger.isDebugEnabled()) {
-      logger.debug(format("Perform doClose: [%s]", getClass().getName()));
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug(format("Perform doClose: [%s]", getClass().getName()));
     }
-    disposeIfNeeded(jmsConnection, logger);
+    disposeIfNeeded(jmsConnection, LOGGER);
   }
 
   @Override
   public void dispose() {
-    if (logger.isDebugEnabled()) {
-      logger.debug(format("Disposing [%s]", getClass().getName()));
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug(format("Disposing [%s]", getClass().getName()));
     }
-    disposeIfNeeded(jmsConnectionFactory, logger);
+    disposeIfNeeded(jmsConnectionFactory, LOGGER);
   }
 
   @Override
   public ConnectionValidationResult validate(JmsConnection jmsConnection) {
-    if (logger.isDebugEnabled()) {
-      logger.debug("Validating connection");
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("Validating connection");
     }
 
     try {
@@ -181,17 +187,17 @@ public abstract class BaseConnectionProvider implements PoolingConnectionProvide
       jmsConnection.get().start();
       return success();
     } catch (Exception e) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("Validation failed: ", e);
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("Validation failed: ", e);
       }
       return failure("Invalid connection provided: Connection could not be started.", DISCONNECTED, e);
     }
   }
 
-  private void initialiseConnectionFactory() throws InitialisationException {
+  private void initialiseConnectionFactory() throws Exception {
 
-    if (logger.isDebugEnabled()) {
-      logger.debug("Initialising Connection Factory");
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("Initialising Connection Factory");
     }
 
     ConnectionFactory targetFactory = getConnectionFactory();
@@ -205,8 +211,8 @@ public abstract class BaseConnectionProvider implements PoolingConnectionProvide
       String password = getConnectionParameters().getPassword();
       String clientId = getConnectionParameters().getClientId();
 
-      if (logger.isDebugEnabled()) {
-        logger.debug(format("Using CachingConnectionFactory wrapper with: username:[%s], password:[%s], clientId:[%s]",
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug(format("Using CachingConnectionFactory wrapper with: username:[%s], password:[%s], clientId:[%s]",
                             username, password, clientId));
       }
       jmsConnectionFactory =
@@ -217,8 +223,8 @@ public abstract class BaseConnectionProvider implements PoolingConnectionProvide
       initialiseIfNeeded(jmsConnectionFactory);
     } else {
 
-      if (logger.isDebugEnabled()) {
-        logger.debug(format("Skip CachingConnectionFactory Wrapper"));
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug(format("Skip CachingConnectionFactory Wrapper"));
       }
 
       jmsConnectionFactory = targetFactory;
@@ -243,8 +249,8 @@ public abstract class BaseConnectionProvider implements PoolingConnectionProvide
       jmsSupport = new Jms11Support();
     }
 
-    if (logger.isDebugEnabled()) {
-      logger.debug(format("JMS Support set to [%s]", jmsSupport.getSpecification().getName()));
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug(format("JMS Support set to [%s]", jmsSupport.getSpecification().getName()));
     }
   }
 
@@ -274,8 +280,8 @@ public abstract class BaseConnectionProvider implements PoolingConnectionProvide
         try {
           connection.setExceptionListener(getExceptionListener());
         } catch (Exception e) {
-          if (logger.isDebugEnabled()) {
-            logger.debug("An error occurred while setting the ExceptionListener. "
+          if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("An error occurred while setting the ExceptionListener. "
                 + "No ExceptionListener is available in a Java EE web or EJB application. ", e);
           }
         }

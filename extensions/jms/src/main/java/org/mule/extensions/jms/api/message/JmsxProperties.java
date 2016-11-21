@@ -114,33 +114,16 @@ public class JmsxProperties {
   public Map<String, Object> asMap() {
     ImmutableMap.Builder<String, Object> builder = new ImmutableMap.Builder<>();
 
-    if (this.jmsxUserID != null) {
-      builder.put(JMSXUserID, this.jmsxUserID);
-    }
-    if (this.jmsxAppID != null) {
-      builder.put(JMSXAppID, this.jmsxAppID);
-    }
-    if (this.jmsxDeliveryCount != null) {
-      builder.put(JMSXDeliveryCount, this.jmsxDeliveryCount);
-    }
-    if (this.jmsxGroupID != null) {
-      builder.put(JMSXGroupID, this.jmsxGroupID);
-    }
-    if (this.jmsxGroupSeq != null) {
-      builder.put(JMSXGroupSeq, this.jmsxGroupSeq);
-    }
-    if (this.jmsxProducerTXID != null) {
-      builder.put(JMSXProducerTXID, this.jmsxProducerTXID);
-    }
-    if (this.jmsxConsumerTXID != null) {
-      builder.put(JMSXConsumerTXID, this.jmsxConsumerTXID);
-    }
-    if (this.jmsxRcvTimestamp != null) {
-      builder.put(JMSXRcvTimestamp, this.jmsxRcvTimestamp);
-    }
+    addIfNotNullValue(builder, JMSXUserID, this.jmsxUserID);
+    addIfNotNullValue(builder, JMSXAppID, this.jmsxAppID);
+    addIfNotNullValue(builder, JMSXDeliveryCount, this.jmsxDeliveryCount);
+    addIfNotNullValue(builder, JMSXGroupID, this.jmsxGroupID);
+    addIfNotNullValue(builder, JMSXGroupSeq, this.jmsxGroupSeq);
+    addIfNotNullValue(builder, JMSXProducerTXID, this.jmsxProducerTXID);
+    addIfNotNullValue(builder, JMSXConsumerTXID, this.jmsxConsumerTXID);
+    addIfNotNullValue(builder, JMSXRcvTimestamp, this.jmsxRcvTimestamp);
 
     return builder.build();
-
   }
 
   /**
@@ -197,6 +180,12 @@ public class JmsxProperties {
    */
   public long getJMSXRcvTimestamp() {
     return jmsxRcvTimestamp;
+  }
+
+  private void addIfNotNullValue(ImmutableMap.Builder<String, Object> builder, String key, Object value) {
+    if (value != null) {
+      builder.put(key, value);
+    }
   }
 
 }

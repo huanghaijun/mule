@@ -53,7 +53,7 @@ import org.slf4j.LoggerFactory;
  */
 public class Jms102bSupport extends Jms11Support {
 
-  private static final Logger logger = LoggerFactory.getLogger(Jms102bSupport.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(Jms102bSupport.class);
 
   public Jms102bSupport() {
     super();
@@ -181,8 +181,8 @@ public class Jms102bSupport extends Jms11Support {
       }
     }
 
-    if (logger.isDebugEnabled()) {
-      logger.debug("Using non-JNDI destination " + name + ", will create one now");
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("Using non-JNDI destination " + name + ", will create one now");
     }
 
     if (session == null) {
@@ -224,8 +224,8 @@ public class Jms102bSupport extends Jms11Support {
   public void send(MessageProducer producer, Message message, Destination dest, boolean persistent, int priority,
                    long ttl, boolean topic)
       throws JMSException {
-    if (logger.isDebugEnabled()) {
-      logger.debug(format("Sending message to [%s], persistent:[%s], with priority:[%s] and ttl:[%s]",
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug(format("Sending message to [%s], persistent:[%s], with priority:[%s] and ttl:[%s]",
                           dest instanceof Queue ? ((Queue) dest).getQueueName() : ((Topic) dest).getTopicName(),
                           persistent, priority, ttl));
     }

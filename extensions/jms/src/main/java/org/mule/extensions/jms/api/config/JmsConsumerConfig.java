@@ -58,9 +58,8 @@ public class JmsConsumerConfig extends JmsBaseConfig {
   private String selector;
 
   /**
-   * No redelivery is represented with 0,
-   * while -1 means infinite re deliveries accepted.
-   * Can be overridden at the message source level.
+   * Used to configure the number of redelivers before discarding the message.
+   * No redelivery is represented with 0, while -1 means infinite re deliveries accepted.
    */
   @Parameter
   @Optional(defaultValue = "0")

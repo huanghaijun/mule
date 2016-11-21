@@ -41,23 +41,23 @@ import org.slf4j.LoggerFactory;
  */
 public class JmsPublish {
 
-  private static final Logger logger = LoggerFactory.getLogger(JmsPublish.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(JmsPublish.class);
 
 
   /**
    * Operation that allows the user to send a {@link Message} to a JMS {@link Destination
    *
-   * @param config the current {@link JmsProducerConfig}
-   * @param connection the current {@link JmsConnection}
-   * @param destination the name of the {@link Destination} where the {@link Message} should be sent
-   * @param isTopic {@code true} if the {@code destination} is a {@link Topic}
-   * @param messageBuilder the {@link MessageBuilder} used to create the {@link Message} to be sent
+   * @param config             the current {@link JmsProducerConfig}
+   * @param connection         the current {@link JmsConnection}
+   * @param destination        the name of the {@link Destination} where the {@link Message} should be sent
+   * @param isTopic            {@code true} if the {@code destination} is a {@link Topic}
+   * @param messageBuilder     the {@link MessageBuilder} used to create the {@link Message} to be sent
    * @param persistentDelivery {@code true} if {@link DeliveryMode#PERSISTENT} should be used
-   * @param priority the {@link Message#getJMSPriority} to be set
-   * @param timeToLive the time the message will be in the broker before it expires and is discarded
-   * @param timeToLiveUnit unit to be used in the timeToLive configurations
-   * @param deliveryDelay Only used by JMS 2.0. Sets the delivery delay to be applied in order to postpone the Message delivery
-   * @param deliveryDelayUnit Time unit to be used in the deliveryDelay configurations
+   * @param priority           the {@link Message#getJMSPriority} to be set
+   * @param timeToLive         the time the message will be in the broker before it expires and is discarded
+   * @param timeToLiveUnit     unit to be used in the timeToLive configurations
+   * @param deliveryDelay      Only used by JMS 2.0. Sets the delivery delay to be applied in order to postpone the Message delivery
+   * @param deliveryDelayUnit  Time unit to be used in the deliveryDelay configurations
    * @throws JmsExtensionException if an error occurs
    */
   public void publish(@UseConfig JmsProducerConfig config, @Connection JmsConnection connection,
@@ -81,77 +81,53 @@ public class JmsPublish {
     timeToLive = resolveOverride(config.getTimeToLiveUnit(), timeToLiveUnit)
         .toMillis(resolveOverride(config.getTimeToLive(), timeToLive));
 
-    JmsSession session = null;
-    MessageProducer producer = null;
     try {
 
-      if (logger.isDebugEnabled()) {
-        logger.debug("Begin publish");
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("Begin publish");
       }
 
-      session = connection.createSession(AUTO, isTopic);
+      JmsSession session = connection.createSession(AUTO, isTopic);
       Message message = messageBuilder.build(connection.getJmsSupport(), session.get(), config);
 
-      if (logger.isDebugEnabled()) {
-        logger.debug("Message built, sending message");
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("Message built, sending message");
       }
 
       JmsSupport jmsSupport = connection.getJmsSupport();
       Destination jmsDestination = jmsSupport.createDestination(session.get(), destination, isTopic);
 
-      producer = createProducer(connection, config, isTopic, session.get(), delay, jmsSupport, jmsDestination);
+      MessageProducer producer = createProducer(connection, config, isTopic, session.get(), delay, jmsDestination);
       jmsSupport.send(producer, message, jmsDestination, persistentDelivery, priority, timeToLive, isTopic);
 
     } catch (Exception e) {
-      logger.error("An error occurred while sending a message: ", e);
+      LOGGER.error("An error occurred while sending a message: ", e);
 
       throw new JmsExtensionException(createStaticMessage("An error occurred while sending a message: "), e);
 
-    } finally {
-      if (logger.isDebugEnabled()) {
-        logger.debug("Closing Producer");
-      }
-      connection.closeQuietly(producer);
-
-      if (logger.isDebugEnabled()) {
-        logger.debug("Closing Session");
-      }
-      connection.closeQuietly(session);
     }
   }
 
   private MessageProducer createProducer(JmsConnection connection, JmsProducerConfig config, boolean isTopic,
-                                         Session session, java.util.Optional<Long> deliveryDelay,
-                                         JmsSupport jmsSupport, Destination jmsDestination)
+                                         Session session, java.util.Optional<Long> deliveryDelay, Destination jmsDestination)
       throws JMSException {
 
-    MessageProducer producer = null;
+    MessageProducer producer = connection.createProducer(session, jmsDestination, isTopic);
 
-    try {
-      producer = jmsSupport.createProducer(session, jmsDestination, isTopic);
-
-      setDisableMessageID(producer, config.isDisableMessageId());
-      setDisableMessageTimestamp(producer, config.isDisableMessageTimestamp());
-      if (deliveryDelay.isPresent()) {
-        setDeliveryDelay(producer, deliveryDelay.get());
-      }
-
-      return producer;
-
-    } catch (Exception e) {
-      logger.error("An error occurred while creating the MessageProducer: ", e);
-      connection.closeQuietly(producer);
-      //FIXME
-      throw e;
+    setDisableMessageID(producer, config.isDisableMessageId());
+    setDisableMessageTimestamp(producer, config.isDisableMessageTimestamp());
+    if (deliveryDelay.isPresent()) {
+      setDeliveryDelay(producer, deliveryDelay.get());
     }
 
+    return producer;
   }
 
   private void setDeliveryDelay(MessageProducer producer, Long value) {
     try {
       producer.setDeliveryDelay(value);
     } catch (JMSException e) {
-      logger.error("Failed to configure [setDeliveryDelay] in MessageProducer: ", e);
+      LOGGER.error("Failed to configure [setDeliveryDelay] in MessageProducer: ", e);
     }
   }
 
@@ -159,7 +135,7 @@ public class JmsPublish {
     try {
       producer.setDisableMessageID(value);
     } catch (JMSException e) {
-      logger.error("Failed to configure [setDisableMessageID] in MessageProducer: ", e);
+      LOGGER.error("Failed to configure [setDisableMessageID] in MessageProducer: ", e);
     }
   }
 
@@ -167,7 +143,7 @@ public class JmsPublish {
     try {
       producer.setDisableMessageTimestamp(value);
     } catch (JMSException e) {
-      logger.error("Failed to configure [setDisableMessageTimestamp] in MessageProducer: ", e);
+      LOGGER.error("Failed to configure [setDisableMessageTimestamp] in MessageProducer: ", e);
     }
   }
 }

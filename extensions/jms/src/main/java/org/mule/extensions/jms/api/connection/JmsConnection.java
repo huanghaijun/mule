@@ -12,15 +12,19 @@ import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.mule.extensions.jms.api.config.AckMode.MANUAL;
 import static org.mule.extensions.jms.api.config.AckMode.TRANSACTED;
 import org.mule.extensions.jms.api.config.AckMode;
+import org.mule.extensions.jms.api.destination.ConsumerType;
 import org.mule.extensions.jms.internal.support.JmsSupport;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.Disposable;
 import org.mule.runtime.api.lifecycle.Stoppable;
 
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import javax.jms.Connection;
+import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -37,11 +41,14 @@ import org.slf4j.LoggerFactory;
  */
 public class JmsConnection implements Stoppable, Disposable {
 
-  private static final Logger logger = LoggerFactory.getLogger(JmsConnection.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(JmsConnection.class);
 
-  private JmsSupport jmsSupport;
-  private Connection connection;
-  private Map<String, Message> pendingAckSessions = new HashMap<>();
+  private final JmsSupport jmsSupport;
+  private final Connection connection;
+  private final Map<String, Message> pendingAckSessions = new HashMap<>();
+  private final List<MessageConsumer> createdConsumers = new LinkedList<>();
+  private final List<MessageProducer> createdProducers = new LinkedList<>();
+  private final List<Session> createdSessions = new LinkedList<>();
 
   public JmsConnection(JmsSupport jmsSupport, Connection connection) {
     this.jmsSupport = jmsSupport;
@@ -58,6 +65,7 @@ public class JmsConnection implements Stoppable, Disposable {
 
   public JmsSession createSession(AckMode ackMode, boolean isTopic) throws JMSException {
     Session session = jmsSupport.createSession(connection, isTopic, ackMode.equals(TRANSACTED), ackMode.getAckMode());
+    createdSessions.add(session);
 
     if (ackMode.equals(MANUAL)) {
       String ackId = randomAlphanumeric(16);
@@ -68,12 +76,25 @@ public class JmsConnection implements Stoppable, Disposable {
     return new JmsSession(session, "");
   }
 
+  public MessageConsumer createConsumer(Session session, Destination jmsDestination, String selector, ConsumerType consumerType)
+      throws JMSException {
+    MessageConsumer consumer = jmsSupport.createConsumer(session, jmsDestination, selector, consumerType);
+    createdConsumers.add(consumer);
+    return consumer;
+  }
+
+  public MessageProducer createProducer(Session session, Destination jmsDestination, boolean isTopic) throws JMSException {
+    MessageProducer producer = jmsSupport.createProducer(session, jmsDestination, isTopic);
+    createdProducers.add(producer);
+    return producer;
+  }
+
   public void registerMessageForAck(String ackId, Message message) {
     if (!isBlank(ackId) && pendingAckSessions.get(ackId) == null) {
       pendingAckSessions.put(ackId, message);
 
-      if (logger.isDebugEnabled()) {
-        logger.debug(format("Registered Message for Session AckId [%s]", ackId));
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug(format("Registered Message for Session AckId [%s]", ackId));
       }
     }
   }
@@ -90,18 +111,18 @@ public class JmsConnection implements Stoppable, Disposable {
 
   @Override
   public void stop() throws MuleException {
-    if (logger.isDebugEnabled()) {
-      logger.debug("Stopping JMS Connection: " + connection);
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("Stopping JMS Connection: " + connection);
     }
     try {
       connection.stop();
     } catch (javax.jms.IllegalStateException ex) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("Ignoring Connection state exception - assuming already closed: ", ex);
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("Ignoring Connection state exception - assuming already closed: ", ex);
       }
     } catch (JMSException ex) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("Could not stop JMS Connection - assuming this method has been called in a Java EE web or EJB application: ",
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("Could not stop JMS Connection - assuming this method has been called in a Java EE web or EJB application: ",
                      ex);
       }
     }
@@ -109,113 +130,135 @@ public class JmsConnection implements Stoppable, Disposable {
 
   @Override
   public void dispose() {
-    if (logger.isDebugEnabled()) {
-      logger.debug("Closing JMS Connection: " + connection);
-    }
     try {
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("Closing JMS Connection: " + connection);
+      }
+
+      closeConsumers();
+      closeProducers();
+      closeSessions();
       connection.close();
       pendingAckSessions.clear();
     } catch (javax.jms.IllegalStateException ex) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("Ignoring Connection state exception - assuming already closed: ", ex);
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("Ignoring Connection state exception - assuming already closed: ", ex);
       }
     } catch (JMSException ex) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("Could not close JMS Connection : ", ex);
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("Could not close JMS Connection : ", ex);
       }
     }
+  }
+
+  private void closeSessions() {
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("Closing Session");
+    }
+    createdSessions.forEach(this::closeQuietly);
+  }
+
+  private void closeConsumers() {
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("Closing Consumers");
+    }
+    createdConsumers.forEach(this::closeQuietly);
+  }
+
+  private void closeProducers() {
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("Closing Producers");
+    }
+    createdProducers.forEach(this::closeQuietly);
   }
 
   /**
    * Closes the MessageConsumer
    *
-   * @param consumer
-   * @throws JMSException
+   * @param consumer {@link MessageConsumer} to close
+   * @throws JMSException if an error occurs
    */
-  public void close(MessageConsumer consumer) throws JMSException {
+  private void close(MessageConsumer consumer) throws JMSException {
     if (consumer != null) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("Closing consumer: " + consumer);
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("Closing consumer: " + consumer);
       }
       consumer.close();
-    } else if (logger.isDebugEnabled()) {
-      logger.debug("Consumer is null, nothing to close");
+    } else if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("Consumer is null, nothing to close");
     }
   }
 
   /**
-   * Closes the MessageConsumer without throwing an exception (an error message is
-   * logged instead).
+   * Closes the {@link MessageConsumer} without throwing an exception (an error message is logged instead)
    *
-   * @param consumer
+   * @param consumer the {@link MessageConsumer} to close
    */
-  public void closeQuietly(MessageConsumer consumer) {
+  private void closeQuietly(MessageConsumer consumer) {
     try {
       close(consumer);
     } catch (Exception e) {
-      logger.warn("Failed to close jms message consumer: " + e.getMessage());
+      LOGGER.warn("Failed to close jms message consumer: " + e.getMessage());
     }
   }
 
   /**
-   * Closes the MuleSession
+   * Closes the {@link Session}
    *
-   * @param session
+   * @param session the {@link Session} to close
    * @throws JMSException
    */
-  public void close(Session session) throws JMSException {
+  private void close(Session session) throws JMSException {
     if (session != null) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("Closing session " + session);
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("Closing session " + session);
       }
       session.close();
     }
   }
 
   /**
-   * Closes the MuleSession without throwing an exception (an error message is logged
-   * instead).
+   * Closes the {@link Session} without throwing an exception (an error message is logged instead)
    *
-   * @param session
+   * @param session the {@link Session} to close
    */
-  public void closeQuietly(JmsSession session) {
+  private void closeQuietly(Session session) {
     if (session != null) {
       try {
-        close(session.get());
+        close(session);
       } catch (Exception e) {
-        logger.warn("Failed to close jms session consumer: " + e.getMessage());
+        LOGGER.warn("Failed to close jms session: " + e.getMessage());
       }
     }
   }
 
   /**
-   * Closes the MessageProducer
+   * Closes the {@link MessageProducer}
    *
-   * @param producer
+   * @param producer the {@link MessageProducer} to close
    * @throws JMSException
    */
-  public void close(MessageProducer producer) throws JMSException {
+  private void close(MessageProducer producer) throws JMSException {
     if (producer != null) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("Closing producer: " + producer);
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("Closing producer: " + producer);
       }
       producer.close();
-    } else if (logger.isDebugEnabled()) {
-      logger.debug("Producer is null, nothing to close");
+    } else if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("Producer is null, nothing to close");
     }
   }
 
   /**
-   * Closes the MessageProducer without throwing an exception (an error message is
-   * logged instead).
+   * Closes the {@link MessageProducer} without throwing an exception (an error message is logged instead)
    *
-   * @param producer
+   * @param producer the {@link MessageProducer} to close
    */
-  public void closeQuietly(MessageProducer producer) {
+  private void closeQuietly(MessageProducer producer) {
     try {
       close(producer);
     } catch (Exception e) {
-      logger.warn("Failed to close jms message producer: " + e.getMessage());
+      LOGGER.warn("Failed to close jms message producer: " + e.getMessage());
     }
   }
 

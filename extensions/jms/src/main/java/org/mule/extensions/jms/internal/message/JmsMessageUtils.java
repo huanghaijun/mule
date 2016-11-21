@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
  */
 public class JmsMessageUtils {
 
-  private static final Logger logger = LoggerFactory.getLogger(JmsMessageUtils.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(JmsMessageUtils.class);
   private static final char REPLACEMENT_CHAR = '_';
 
   public static Message toMessage(Object object, Session session) throws JMSException {
@@ -92,14 +92,14 @@ public class JmsMessageUtils {
             properties.put(key, value);
           }
         } catch (JMSException e1) {
-          if (logger.isDebugEnabled()) {
-            logger.debug("An error occurred while setting a JMS property: ", e1);
+          if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("An error occurred while setting a JMS property: ", e1);
           }
         }
       }
     } catch (JMSException e2) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("An error occurred while retrieving the JMS Message properties: ", e2);
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("An error occurred while retrieving the JMS Message properties: ", e2);
       }
     }
     return properties;
@@ -139,7 +139,7 @@ public class JmsMessageUtils {
       }
 
       if (nonCompliant) {
-        logger.warn(MessageFormat.format(
+        LOGGER.warn(MessageFormat.format(
                                          "Header: {0} is not compliant with JMS specification (sec. 3.5.1, 3.8.1.1). It will cause "
                                              +
                                              "problems in your and other applications. Please update your application code to correct this. "
@@ -192,9 +192,9 @@ public class JmsMessageUtils {
     try {
       inputStream.close();
     } catch (Exception e) {
-      logger.warn("Failure closing InputStream " + e.getMessage());
-      if (logger.isDebugEnabled()) {
-        logger.debug(e.getMessage(), e);
+      LOGGER.warn("Failure closing InputStream " + e.getMessage());
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug(e.getMessage(), e);
       }
     }
   }

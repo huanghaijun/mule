@@ -18,15 +18,25 @@ import static org.mule.extensions.jms.internal.message.JMSXDefinedPropertiesName
 import static org.mule.extensions.jms.internal.message.JMSXDefinedPropertiesNames.JMSXRcvTimestamp;
 import static org.mule.extensions.jms.internal.message.JMSXDefinedPropertiesNames.JMSXUserID;
 import static org.mule.extensions.jms.internal.message.JMSXDefinedPropertiesNames.JMSX_NAMES;
+import static org.mule.runtime.api.util.Preconditions.checkArgument;
 import org.mule.extensions.jms.api.message.JmsxProperties;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.jms.Message;
+
 /**
- * //TODO
+ * Builder that provides a simple way of creating a {@link JmsxProperties} instance based on
+ * the predefined properties {@link JMSXDefinedPropertiesNames names}.
+ * <p>
+ * This is useful for converting the properties {@link Map} found in the original {@link Message}
+ * to their representation as {@link JmsxProperties}.
+ * A default value is provided for the properties that are not set.
+ *
+ * @since 4.0
  */
-public final class JmsxPropertiesBuilder {
+final class JmsxPropertiesBuilder {
 
   private final Map<String, Object> properties = new HashMap<>();
 
@@ -37,10 +47,8 @@ public final class JmsxPropertiesBuilder {
   }
 
   public JmsxPropertiesBuilder add(String key, Object value) {
-    if (!JMSX_NAMES.contains(key)) {
-      throw new IllegalArgumentException(format("Invalid key [%s], supported keys for JMSXProperties are [%s]",
-                                                key, join(", ", JMSX_NAMES)));
-    }
+    checkArgument(JMSX_NAMES.contains(key),
+                  format("Invalid key [%s], supported keys for JMSXProperties are [%s]", key, join(", ", JMSX_NAMES)));
 
     properties.put(key, value);
     return this;

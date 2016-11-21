@@ -12,7 +12,7 @@
     <jmsn:consumer-config name="consumer">
         <jmsn:generic-connection connectionFactory="customConnectionFactory">
             <jmsn:caching-strategy>
-                <jmsn:no-caching/>@
+                <jmsn:no-caching/>
             </jmsn:caching-strategy>
         </jmsn:generic-connection>
     </jmsn:consumer-config>

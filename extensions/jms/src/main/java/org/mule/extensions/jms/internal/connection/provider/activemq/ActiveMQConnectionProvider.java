@@ -8,6 +8,7 @@ package org.mule.extensions.jms.internal.connection.provider.activemq;
 
 import static org.mule.extensions.jms.api.connection.JmsSpecification.JMS_2_0;
 import org.mule.extensions.jms.api.connection.JmsConnection;
+import org.mule.extensions.jms.internal.connection.exception.ActiveMQConnectionException;
 import org.mule.extensions.jms.internal.connection.provider.BaseConnectionProvider;
 import org.mule.runtime.api.connection.ConnectionProvider;
 import org.mule.runtime.core.util.proxy.TargetInvocationHandler;
@@ -33,7 +34,7 @@ import org.slf4j.LoggerFactory;
 @Alias("active-mq")
 public class ActiveMQConnectionProvider extends BaseConnectionProvider {
 
-  private static final Logger logger = LoggerFactory.getLogger(ActiveMQConnectionProvider.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(ActiveMQConnectionProvider.class);
 
   /**
    * a provider for an {@link ActiveMQConnectionFactory}
@@ -44,7 +45,7 @@ public class ActiveMQConnectionProvider extends BaseConnectionProvider {
   private ConnectionFactory connectionFactory;
 
   @Override
-  public ConnectionFactory getConnectionFactory() {
+  public ConnectionFactory getConnectionFactory() throws ActiveMQConnectionException {
     if (connectionFactory != null) {
       return connectionFactory;
     }
@@ -53,11 +54,11 @@ public class ActiveMQConnectionProvider extends BaseConnectionProvider {
     return connectionFactory;
   }
 
-  private void createConnectionFactory() {
+  private void createConnectionFactory() throws ActiveMQConnectionException {
     connectionFactory = connectionFactoryProvider.getConnectionFactory();
     if (connectionFactory == null) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("No custom connection factory provided, creating the default for ActiveMq");
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("No custom connection factory provided, creating the default for ActiveMq");
       }
       if (JMS_2_0.equals(getConnectionParameters().getSpecification())) {
 
@@ -73,8 +74,8 @@ public class ActiveMQConnectionProvider extends BaseConnectionProvider {
 
   @Override
   protected void doClose(JmsConnection jmsConnection) {
-    if (logger.isDebugEnabled()) {
-      logger.debug("Performing custom doClose for ActiveMq");
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("Performing custom doClose for ActiveMq");
     }
 
     Connection connection = jmsConnection.get();
@@ -82,9 +83,8 @@ public class ActiveMQConnectionProvider extends BaseConnectionProvider {
     try {
       executeCleanup(connection);
     } catch (Exception e) {
-      logger.warn("Exception cleaning up ActiveMQ JMS connection: ", e);
+      LOGGER.warn("Exception cleaning up ActiveMQ JMS connection: ", e);
     } finally {
-
       super.doClose(jmsConnection);
     }
   }
@@ -110,8 +110,8 @@ public class ActiveMQConnectionProvider extends BaseConnectionProvider {
           Class realConnectionClass = connection.getClass();
           cleanupMethod = realConnectionClass.getMethod("cleanup", (Class[]) null);
         } else {
-          if (logger.isDebugEnabled()) {
-            logger.debug(String.format("InvocationHandler of the JMS connection proxy is of type %s, not doing " +
+          if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(String.format("InvocationHandler of the JMS connection proxy is of type %s, not doing " +
                 "any extra cleanup", invocationHandler.getClass().getName()));
           }
         }
@@ -119,8 +119,8 @@ public class ActiveMQConnectionProvider extends BaseConnectionProvider {
         cleanupMethod = clazz.getMethod("cleanup", (Class[]) null);
       }
     } catch (NoSuchMethodException e) {
-      if (logger.isDebugEnabled()) {
-        logger.debug("Failed to perform a deep cleanup on ActiveMQ connection: ", e);
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("Failed to perform a deep cleanup on ActiveMQ connection: ", e);
       }
     }
 
@@ -132,6 +132,5 @@ public class ActiveMQConnectionProvider extends BaseConnectionProvider {
   public ActiveMQConnectionFactoryProvider getConnectionFactoryProvider() {
     return connectionFactoryProvider;
   }
-
 
 }

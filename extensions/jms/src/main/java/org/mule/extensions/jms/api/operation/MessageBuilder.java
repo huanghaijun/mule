@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
  */
 public class MessageBuilder {
 
-  private static final Logger logger = LoggerFactory.getLogger(MessageBuilder.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(MessageBuilder.class);
   private static final String CONTENT_TYPE_JMS_PROPERTY = "MM_MESSAGE_CONTENT_TYPE";
 
   /**
@@ -152,7 +152,7 @@ public class MessageBuilder {
         message.setJMSReplyTo(destination);
       }
     } catch (DestinationNotFoundException | JMSException e) {
-      logger.error("Unable to set JMSReplyTo header: ", e);
+      LOGGER.error("Unable to set JMSReplyTo header: ", e);
     }
   }
 
@@ -160,7 +160,7 @@ public class MessageBuilder {
     try {
       message.setStringProperty(CONTENT_TYPE_JMS_PROPERTY, resolveOverride(config.getContentType(), contentType));
     } catch (JMSException e) {
-      logger.error(format("Unable to set property [%s] of type String: ", CONTENT_TYPE_JMS_PROPERTY), e);
+      LOGGER.error(format("Unable to set property [%s] of type String: ", CONTENT_TYPE_JMS_PROPERTY), e);
     }
   }
 
@@ -186,8 +186,8 @@ public class MessageBuilder {
       // Various JMS servers have slightly different rules to what
       // can be set as an object property on the message; therefore
       // we have to take a hit n' hope approach
-      if (logger.isDebugEnabled()) {
-        logger.debug(format("Unable to set property [%s] of type [%s]: ", key, value.getClass().getSimpleName()), e);
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug(format("Unable to set property [%s] of type [%s]: ", key, value.getClass().getSimpleName()), e);
       }
     }
   }
@@ -200,7 +200,7 @@ public class MessageBuilder {
         message.setJMSType(type);
       }
     } catch (JMSException e) {
-      logger.error("An error occurred while setting the JMSType property: %s", e);
+      LOGGER.error("An error occurred while setting the JMSType property: %s", e);
     }
   }
 
@@ -210,7 +210,7 @@ public class MessageBuilder {
         message.setJMSCorrelationID(correlationId);
       }
     } catch (JMSException e) {
-      logger.error("An error occurred while setting the JMSCorrelationID property: %s", e);
+      LOGGER.error("An error occurred while setting the JMSCorrelationID property: %s", e);
     }
   }
 

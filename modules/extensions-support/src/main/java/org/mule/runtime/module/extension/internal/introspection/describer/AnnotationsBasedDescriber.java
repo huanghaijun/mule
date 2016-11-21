@@ -637,7 +637,6 @@ public final class AnnotationsBasedDescriber implements Describer {
 
       Class<?> defaultType = extensionParameter.getAnnotation(NullSafe.class).get().defaultImplementingType();
 
-
       if (isInstantiable(parameter.getDeclaration().getType()) && !defaultType.isAssignableFrom(Object.class)) {
         throw new IllegalParameterModelDefinitionException(format("Parameter '%s' is annotated with '@%s' is of concrete type '%s',"
             + " but a 'defaultImplementingType' was provided."

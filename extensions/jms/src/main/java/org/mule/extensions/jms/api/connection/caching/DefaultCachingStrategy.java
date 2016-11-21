@@ -6,6 +6,7 @@
  */
 package org.mule.extensions.jms.api.connection.caching;
 
+import static java.util.Optional.of;
 import org.mule.extensions.jms.internal.connection.JmsCachingConnectionFactory;
 import org.mule.runtime.extension.api.annotation.Alias;
 import org.mule.runtime.extension.api.annotation.param.Optional;
@@ -88,6 +89,6 @@ public class DefaultCachingStrategy implements CachingStrategy, CachingConfigura
    */
   @Override
   public java.util.Optional<CachingConfiguration> strategyConfiguration() {
-    return java.util.Optional.of(this);
+    return of(this);
   }
 }

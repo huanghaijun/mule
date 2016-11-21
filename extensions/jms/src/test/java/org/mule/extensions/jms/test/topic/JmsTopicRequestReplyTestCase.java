@@ -33,7 +33,6 @@ public class JmsTopicRequestReplyTestCase extends JmsAbstractTestCase {
   private static final String REPLY_TO_DESTINATION_VAR = "replyToDestination";
   private static final String REQUEST_LISTENER_FLOW = "request-listener";
 
-
   @Override
   protected String[] getConfigFiles() {
     return new String[] {
@@ -44,8 +43,6 @@ public class JmsTopicRequestReplyTestCase extends JmsAbstractTestCase {
 
   @Test
   public void requestReplyExplicitReplyDestination() throws Exception {
-
-
     ExecutorService executor = newFixedThreadPool(2);
 
     // Subscribe to requester target topic
@@ -61,7 +58,6 @@ public class JmsTopicRequestReplyTestCase extends JmsAbstractTestCase {
                                                                .withPayload(SECOND_MESSAGE).run()
                                                                .getMessage());
 
-
     // Read the message posted by the request flow
     InternalMessage requestedMessage = requesterTarget.get();
 
@@ -75,7 +71,6 @@ public class JmsTopicRequestReplyTestCase extends JmsAbstractTestCase {
         .withVariable(REPLY_TO_DESTINATION_VAR, REPLY_TO_DESTINATION)
         .withPayload(FIRST_MESSAGE).run();
 
-    //
     InternalMessage replyMessage = requestReply.get();
 
     assertThat(replyMessage, not(nullValue()));
@@ -84,7 +79,6 @@ public class JmsTopicRequestReplyTestCase extends JmsAbstractTestCase {
     assertThat(replyMessage.getAttributes(), not(nullValue()));
 
     executor.shutdown();
-
   }
 
 }

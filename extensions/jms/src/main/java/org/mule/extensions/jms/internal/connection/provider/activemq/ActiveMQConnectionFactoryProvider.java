@@ -6,8 +6,11 @@
  */
 package org.mule.extensions.jms.internal.connection.provider.activemq;
 
+import static java.lang.String.format;
+import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
 import static org.mule.runtime.core.util.ClassUtils.instanciateClass;
 import org.mule.extensions.jms.api.connection.factory.activemq.ActiveMQConnectionFactoryConfiguration;
+import org.mule.extensions.jms.internal.connection.exception.ActiveMQConnectionException;
 import org.mule.runtime.extension.api.annotation.param.ExclusiveOptionals;
 import org.mule.runtime.extension.api.annotation.param.NullSafe;
 import org.mule.runtime.extension.api.annotation.param.Optional;
@@ -33,7 +36,7 @@ import org.slf4j.LoggerFactory;
 @ExclusiveOptionals
 public class ActiveMQConnectionFactoryProvider {
 
-  private static final Logger logger = LoggerFactory.getLogger(ActiveMQConnectionFactoryProvider.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(ActiveMQConnectionFactoryProvider.class);
 
   private static final String ACTIVEMQ_CONNECTION_FACTORY_CLASS = "org.apache.activemq.ActiveMQConnectionFactory";
   private static final String ACTIVEMQ_XA_CONNECTION_FACTORY_CLASS = "org.apache.activemq.ActiveMQXAConnectionFactory";
@@ -59,11 +62,11 @@ public class ActiveMQConnectionFactoryProvider {
     return connectionFactory;
   }
 
-  ConnectionFactory createDefaultConnectionFactory() {
+  ConnectionFactory createDefaultConnectionFactory() throws ActiveMQConnectionException {
 
     try {
-      if (logger.isDebugEnabled()) {
-        logger.debug(String.format("Creating new [%s]", getFactoryClass()));
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug(format("Creating new [%s]", getFactoryClass()));
       }
 
       this.connectionFactory = (ConnectionFactory) instanciateClass(getFactoryClass(),
@@ -71,9 +74,10 @@ public class ActiveMQConnectionFactoryProvider {
       applyVendorSpecificConnectionFactoryProperties(connectionFactory);
       return connectionFactory;
     } catch (Exception e) {
-      //FIXME handling
-      e.printStackTrace();
-      throw new RuntimeException(e);
+      String message = format("Failed to create a default Connection Factory for ActiveMQ using the [%s] implementation: ",
+                              getFactoryClass());
+      LOGGER.error(message, e);
+      throw new ActiveMQConnectionException(createStaticMessage(message), e);
     }
   }
 
@@ -86,7 +90,7 @@ public class ActiveMQConnectionFactoryProvider {
       setRedeliveryDelay(redeliveryPolicy);
 
     } catch (Exception e) {
-      logger.error("Failed to set custom ConnectionFactoryProperties for ActiveMQ RedeliveryPolicy ", e);
+      LOGGER.error("Failed to set custom ConnectionFactoryProperties for ActiveMQ RedeliveryPolicy ", e);
     }
   }
 
