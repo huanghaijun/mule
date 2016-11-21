@@ -236,7 +236,8 @@ public final class DefaultExtensionFactory implements ExtensionFactory {
                                            toOutputModel(declaration.getOutput()),
                                            toOutputModel(declaration.getOutputAttributes()),
                                            declaration.getDisplayModel(),
-                                           declaration.getModelProperties());
+                                           declaration.getModelProperties(),
+                                           declaration.getErrorTypes());
       });
     }
 

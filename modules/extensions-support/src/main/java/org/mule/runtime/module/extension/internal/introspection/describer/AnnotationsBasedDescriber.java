@@ -7,8 +7,11 @@
 package org.mule.runtime.module.extension.internal.introspection.describer;
 
 import static java.lang.String.format;
+import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang.StringUtils.EMPTY;
+import static org.mule.runtime.api.error.Errors.ANY;
+import static org.mule.runtime.api.error.Errors.CONNECTIVITY;
 import static org.mule.runtime.api.meta.ExpressionSupport.NOT_SUPPORTED;
 import static org.mule.runtime.api.meta.model.connection.ConnectionManagementType.CACHED;
 import static org.mule.runtime.api.meta.model.connection.ConnectionManagementType.NONE;
@@ -26,13 +29,16 @@ import static org.mule.runtime.module.extension.internal.util.IntrospectionUtils
 import static org.mule.runtime.module.extension.internal.util.IntrospectionUtils.getFieldsWithGetters;
 import static org.mule.runtime.module.extension.internal.util.IntrospectionUtils.getMethodReturnAttributesType;
 import static org.mule.runtime.module.extension.internal.util.IntrospectionUtils.getMethodReturnType;
+import com.google.common.collect.ImmutableList;
 import org.mule.metadata.api.ClassTypeLoader;
 import org.mule.metadata.api.model.MetadataType;
 import org.mule.runtime.api.connection.CachedConnectionProvider;
+import org.mule.runtime.api.connection.ConnectionException;
 import org.mule.runtime.api.connection.ConnectionProvider;
 import org.mule.runtime.api.connection.PoolingConnectionProvider;
 import org.mule.runtime.api.meta.MuleVersion;
 import org.mule.runtime.api.meta.model.ElementDslModel;
+import org.mule.runtime.api.meta.model.ErrorModel;
 import org.mule.runtime.api.meta.model.connection.ConnectionManagementType;
 import org.mule.runtime.api.meta.model.declaration.fluent.ConfigurationDeclarer;
 import org.mule.runtime.api.meta.model.declaration.fluent.ConnectionProviderDeclarer;
@@ -49,6 +55,7 @@ import org.mule.runtime.api.meta.model.declaration.fluent.SourceDeclarer;
 import org.mule.runtime.api.meta.model.display.LayoutModel;
 import org.mule.runtime.core.util.ArrayUtils;
 import org.mule.runtime.core.util.CollectionUtils;
+import org.mule.runtime.dsl.api.xml.DslConstants;
 import org.mule.runtime.extension.api.annotation.Configuration;
 import org.mule.runtime.extension.api.annotation.Expression;
 import org.mule.runtime.extension.api.annotation.Extensible;
@@ -75,6 +82,7 @@ import org.mule.runtime.extension.api.exception.IllegalOperationModelDefinitionE
 import org.mule.runtime.extension.api.exception.IllegalParameterModelDefinitionException;
 import org.mule.runtime.extension.api.exception.IllegalSourceModelDefinitionException;
 import org.mule.runtime.extension.api.manifest.DescriberManifest;
+import org.mule.runtime.extension.api.model.error.ErrorModelBuilder;
 import org.mule.runtime.extension.api.model.property.PagedOperationModelProperty;
 import org.mule.runtime.extension.api.runtime.operation.InterceptingCallback;
 import org.mule.runtime.extension.api.runtime.streaming.PagingProvider;
@@ -101,6 +109,7 @@ import org.mule.runtime.module.extension.internal.introspection.describer.model.
 import org.mule.runtime.module.extension.internal.introspection.describer.model.WithOperationContainers;
 import org.mule.runtime.module.extension.internal.introspection.describer.model.WithParameters;
 import org.mule.runtime.module.extension.internal.introspection.describer.model.runtime.FieldWrapper;
+import org.mule.runtime.module.extension.internal.introspection.describer.model.runtime.TypeWrapper;
 import org.mule.runtime.module.extension.internal.introspection.utils.ParameterDeclarationContext;
 import org.mule.runtime.module.extension.internal.introspection.version.VersionResolver;
 import org.mule.runtime.module.extension.internal.model.property.CallbackParameterModelProperty;
@@ -122,8 +131,6 @@ import org.mule.runtime.module.extension.internal.model.property.SourceFactoryMo
 import org.mule.runtime.module.extension.internal.model.property.TypeRestrictionModelProperty;
 import org.mule.runtime.module.extension.internal.runtime.execution.ReflectiveOperationExecutorFactory;
 import org.mule.runtime.module.extension.internal.runtime.source.DefaultSourceFactory;
-
-import com.google.common.collect.ImmutableList;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -159,6 +166,15 @@ public final class AnnotationsBasedDescriber implements Describer {
   private static final String SOURCE = "Source";
   private static final String OPERATION = "Operation";
 
+  private static final ErrorModel MULE_CONNECTIVITY_ERROR = ErrorModelBuilder.newError(CONNECTIVITY)
+          .withNamespace(DslConstants.CORE_NAMESPACE.toUpperCase())
+          .build();
+
+  private static final ErrorModel EXTENSION_CONNECTIVITY_ERROR = ErrorModelBuilder.newError(CONNECTIVITY)
+          .withParent(MULE_CONNECTIVITY_ERROR)
+          .withModelProperty(new ThrownExceptionsModelProperty(singleton(ConnectionException.class)))
+          .build();
+
   private final Class<?> extensionType;
   private final VersionResolver versionResolver;
   private final ClassTypeLoader typeLoader;
@@ -169,6 +185,8 @@ public final class AnnotationsBasedDescriber implements Describer {
 
   private List<ParameterDeclarerContributor> fieldParameterContributors;
   private List<ParameterDeclarerContributor> methodParameterContributors;
+  private Map<String, ErrorModel> errorModelMap;
+  private Map<Class<? extends Exception>, String> exceptionErrorTypeMapping;
 
   public AnnotationsBasedDescriber(Class<?> extensionType, VersionResolver versionResolver) {
     checkArgument(extensionType != null, format("describer %s does not specify an extension type", getClass().getName()));
@@ -200,6 +218,10 @@ public final class AnnotationsBasedDescriber implements Describer {
             .withModelProperty(new ImplementingTypeModelProperty(extensionType));
 
     addExceptionEnricher(extensionElement, declarer);
+
+    ErrorModelDescriberDelegate errorDescriber = new ErrorModelDescriberDelegate(extensionElement);
+   errorModelMap = errorDescriber.getErrorModels();
+    exceptionErrorTypeMapping = errorDescriber.getExceptionErrorTypeMapping();
 
     declareConfigurations(declarer, extensionElement);
     declareConnectionProviders(declarer, extensionElement);
@@ -402,7 +424,8 @@ public final class AnnotationsBasedDescriber implements Describer {
           .withModelProperty(new ImplementingMethodModelProperty(method))
           .withModelProperty(new OperationExecutorModelProperty(new ReflectiveOperationExecutorFactory<>(declaringClass,
                                                                                                          method)));
-
+      addErrors(operationMethod, operation);
+      connectionParameter.ifPresent(extensionParameter -> operation.withErrorType(EXTENSION_CONNECTIVITY_ERROR));
       addExceptionEnricher(operationMethod, operation);
       operation.withOutput().ofType(getMethodReturnType(method, typeLoader));
       operation.withOutputAttributes().ofType(getMethodReturnAttributesType(method, typeLoader));
@@ -413,6 +436,27 @@ public final class AnnotationsBasedDescriber implements Describer {
       calculateExtendedTypes(declaringClass, method, operation);
       operationDeclarers.put(operationMethod, operation);
     }
+  }
+
+  private void addErrors(MethodElement operationMethod, OperationDeclarer operation) {
+    operationMethod.getExceptions()
+            .stream()
+            .map(TypeWrapper::getDeclaringClass)
+            .forEach(clazz -> {
+              String errorTypeIdentifier = exceptionErrorTypeMapping.get(clazz);
+              ErrorModel errorModel;
+              if (errorTypeIdentifier == null) {
+                if(clazz.equals(Exception.class) || clazz.equals(RuntimeException.class)){
+                  errorModel = errorModelMap.get(ANY);
+                } else {
+                  throw new IllegalModelDefinitionException(String.format("The class %s doesn't have a mapping", clazz));
+                }
+//                TODO REVIEW THIS IS TOO MUCH MAYBE HANDLE EXCEPTION CASES
+              } else {
+                errorModel = errorModelMap.get(errorTypeIdentifier);
+              }
+              operation.withErrorType(errorModel);
+            });
   }
 
   private boolean isInvalidConfigSupport(boolean supportsConfig, Optional<ExtensionParameter>... parameters) {

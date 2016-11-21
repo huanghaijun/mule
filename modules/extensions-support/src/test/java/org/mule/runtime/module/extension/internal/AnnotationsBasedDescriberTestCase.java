@@ -6,7 +6,7 @@
  */
 package org.mule.runtime.module.extension.internal;
 
-import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -17,6 +17,7 @@ import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
 import static org.mule.metadata.java.api.utils.JavaTypeUtils.getType;
+import static org.mule.runtime.api.error.Errors.CONNECTIVITY;
 import static org.mule.runtime.api.meta.Category.COMMUNITY;
 import static org.mule.runtime.api.meta.Category.SELECT;
 import static org.mule.runtime.api.meta.ExpressionSupport.NOT_SUPPORTED;
@@ -37,12 +38,20 @@ import static org.mule.test.module.extension.internal.util.ExtensionsTestUtils.o
 import static org.mule.test.module.extension.internal.util.ExtensionsTestUtils.toMetadataType;
 import static org.mule.test.vegan.extension.VeganExtension.APPLE;
 import static org.mule.test.vegan.extension.VeganExtension.BANANA;
+
+import com.google.common.reflect.TypeToken;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.runners.MockitoJUnitRunner;
 import org.mule.metadata.api.model.AnyType;
 import org.mule.metadata.api.model.MetadataType;
 import org.mule.metadata.api.model.VoidType;
-import org.mule.metadata.java.api.annotation.ClassInformationAnnotation;
+import org.mule.runtime.api.exception.MuleException;
+import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.api.meta.ExpressionSupport;
 import org.mule.runtime.api.meta.MuleVersion;
+import org.mule.runtime.api.meta.model.ErrorModel;
 import org.mule.runtime.api.meta.model.declaration.fluent.ConfigurationDeclaration;
 import org.mule.runtime.api.meta.model.declaration.fluent.ConnectionProviderDeclaration;
 import org.mule.runtime.api.meta.model.declaration.fluent.ExtensionDeclaration;
@@ -54,25 +63,26 @@ import org.mule.runtime.api.meta.model.declaration.fluent.ParameterDeclaration;
 import org.mule.runtime.api.meta.model.declaration.fluent.SourceDeclaration;
 import org.mule.runtime.api.meta.model.declaration.fluent.WithOperationsDeclaration;
 import org.mule.runtime.api.tls.TlsContextFactory;
-import org.mule.runtime.core.api.Event;
 import org.mule.runtime.core.config.MuleManifest;
+import org.mule.runtime.dsl.api.xml.DslConstants;
 import org.mule.runtime.extension.api.annotation.Configuration;
 import org.mule.runtime.extension.api.annotation.Configurations;
 import org.mule.runtime.extension.api.annotation.Extension;
 import org.mule.runtime.extension.api.annotation.Operations;
+import org.mule.runtime.extension.api.annotation.connectivity.ConnectionProviders;
+import org.mule.runtime.extension.api.annotation.error.ErrorType;
+import org.mule.runtime.extension.api.annotation.error.ExceptionMapping;
+import org.mule.runtime.extension.api.annotation.param.Optional;
 import org.mule.runtime.extension.api.annotation.param.Parameter;
 import org.mule.runtime.extension.api.annotation.param.ParameterGroup;
-import org.mule.runtime.extension.api.annotation.connectivity.ConnectionProviders;
-import org.mule.runtime.extension.api.annotation.param.Optional;
 import org.mule.runtime.extension.api.annotation.param.UseConfig;
-import org.mule.runtime.extension.api.exception.IllegalModelDefinitionException;
-import org.mule.runtime.extension.api.declaration.type.annotation.TypeAliasAnnotation;
-import org.mule.runtime.extension.api.runtime.exception.ExceptionEnricherFactory;
-import org.mule.runtime.extension.api.model.property.PagedOperationModelProperty;
-import org.mule.runtime.extension.api.runtime.operation.Result;
 import org.mule.runtime.extension.api.exception.IllegalConfigurationModelDefinitionException;
+import org.mule.runtime.extension.api.exception.IllegalModelDefinitionException;
 import org.mule.runtime.extension.api.exception.IllegalOperationModelDefinitionException;
 import org.mule.runtime.extension.api.exception.IllegalParameterModelDefinitionException;
+import org.mule.runtime.extension.api.model.property.PagedOperationModelProperty;
+import org.mule.runtime.extension.api.runtime.exception.ExceptionEnricherFactory;
+import org.mule.runtime.extension.api.runtime.operation.Result;
 import org.mule.runtime.module.extension.internal.model.property.ExceptionEnricherModelProperty;
 import org.mule.runtime.module.extension.internal.model.property.ImplementingTypeModelProperty;
 import org.mule.tck.message.IntegerAttributes;
@@ -84,6 +94,8 @@ import org.mule.test.heisenberg.extension.HeisenbergOperations;
 import org.mule.test.heisenberg.extension.HeisenbergSource;
 import org.mule.test.heisenberg.extension.MoneyLaunderingOperation;
 import org.mule.test.heisenberg.extension.exception.CureCancerExceptionEnricher;
+import org.mule.test.heisenberg.extension.exception.HealthException;
+import org.mule.test.heisenberg.extension.exception.HeisenbergException;
 import org.mule.test.heisenberg.extension.model.ExtendedPersonalInfo;
 import org.mule.test.heisenberg.extension.model.HealthStatus;
 import org.mule.test.heisenberg.extension.model.Investment;
@@ -98,8 +110,7 @@ import org.mule.test.vegan.extension.PaulMcCartneySource;
 import org.mule.test.vegan.extension.VeganAttributes;
 import org.mule.test.vegan.extension.VeganExtension;
 
-import com.google.common.reflect.TypeToken;
-
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Calendar;
@@ -109,12 +120,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.function.Function;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.runners.MockitoJUnitRunner;
 
 @SmallTest
 @RunWith(MockitoJUnitRunner.class)
@@ -160,6 +165,7 @@ public class AnnotationsBasedDescriberTestCase extends AbstractAnnotationsBasedD
   private static final String PROCESS_WEAPON = "processWeapon";
   private static final String PROCESS_WEAPON_WITH_DEFAULT_VALUE = "processWeaponWithDefaultValue";
   private static final String PROCESS_INFO = "processSale";
+  private static final String MULE_ERROR_NAMESPACE = DslConstants.CORE_NAMESPACE.toUpperCase();
 
   @Before
   public void setUp() {
@@ -332,6 +338,47 @@ public class AnnotationsBasedDescriberTestCase extends AbstractAnnotationsBasedD
     assertThat(operation, is(notNullValue()));
     assertOutputType(operation.getOutput(), toMetadataType(Fruit.class), false);
     assertOutputType(operation.getOutputAttributes(), toMetadataType(VeganAttributes.class), false);
+  }
+
+  @Test
+  public void detectErrorTypesCycleDependency() {
+    setDescriber(describerFor(HeisenbergWithCyclicErrorTypes.class));
+    assertThatThrownBy(this::describeExtension)
+            .hasMessageContaining("[TYPE_C, TYPE_A, TYPE_B]")
+            .isInstanceOf(IllegalModelDefinitionException.class);
+  }
+
+  @Test
+  public void operationsWithConnectionsThrowsConnectivityError(){
+    setDescriber(describerFor(HeisenbergExtension.class));
+    ExtensionDeclarer extensionDeclarer = describeExtension();
+    OperationDeclaration callSaul = getOperation(getConfiguration(extensionDeclarer.getDeclaration(),"config"), "callSaul");
+    java.util.Optional<ErrorModel> connectivityErrorModel = callSaul.getErrorTypes().stream().filter(errorModel -> errorModel.getType().equals(CONNECTIVITY)).findFirst();
+
+    assertThat(connectivityErrorModel.isPresent(), is(true));
+    ErrorModel errorModel = connectivityErrorModel.get();
+    assertThat(errorModel.getType(), is(CONNECTIVITY));
+  }
+
+  @Test
+  public void extensionErrorsInheritFromMuleErrors() {
+    setDescriber(describerFor(HeisenbergExtension.class));
+    ExtensionDeclarer extensionDeclarer = describeExtension();
+    OperationDeclaration cureCancer = getOperation(extensionDeclarer.getDeclaration(), "cureCancer");
+
+    java.util.Optional<ErrorModel> optionalHeisenbergError = cureCancer.getErrorTypes().stream().filter(errorModel -> errorModel.getType().equals("HEISENBERG_CONNECTION")).findFirst();
+    assertThat(optionalHeisenbergError.isPresent(), is(true));
+
+    java.util.Optional<ErrorModel> optConnectivityError = optionalHeisenbergError.get().getParent();
+    assertThat(optConnectivityError.isPresent(), is(true));
+    ErrorModel connectivityError = optConnectivityError.get();
+    assertThat(connectivityError.getType(), is(CONNECTIVITY));
+
+    java.util.Optional<ErrorModel> optMuleConnectivityError = connectivityError.getParent();
+    assertThat(optMuleConnectivityError.isPresent(), is(true));
+    ErrorModel muleConnectivityError = optMuleConnectivityError.get();
+    assertThat(muleConnectivityError.getType(), is(CONNECTIVITY));
+    assertThat(muleConnectivityError.getNamespace().get(), is(MULE_ERROR_NAMESPACE));
   }
 
   private <T extends NamedDeclaration> T findDeclarationByName(Collection<T> declarations, String name) {
@@ -659,12 +706,20 @@ public class AnnotationsBasedDescriberTestCase extends AbstractAnnotationsBasedD
   @Extension(name = OTHER_HEISENBERG, description = EXTENSION_DESCRIPTION)
   @Configurations(HeisenbergExtension.class)
   @ConnectionProviders(HeisenbergConnectionProvider.class)
+  @ExceptionMapping(exceptionClass = HeisenbergException.class, errorType = CONNECTIVITY)
+  @ExceptionMapping(exceptionClass = IOException.class, errorType = CONNECTIVITY)
+  @ExceptionMapping(exceptionClass = HealthException.class, errorType = CONNECTIVITY)
+  @ExceptionMapping(exceptionClass = Exception.class, errorType = CONNECTIVITY)
   public static class HeisenbergPointer extends HeisenbergExtension {
 
   }
 
   @Extension(name = OTHER_HEISENBERG, description = EXTENSION_DESCRIPTION)
   @Configurations({HeisenbergExtension.class, NamedHeisenbergAlternateConfig.class})
+  @ExceptionMapping(exceptionClass = HeisenbergException.class, errorType = CONNECTIVITY)
+  @ExceptionMapping(exceptionClass = IOException.class, errorType = CONNECTIVITY)
+  @ExceptionMapping(exceptionClass = HealthException.class, errorType = CONNECTIVITY)
+  @ExceptionMapping(exceptionClass = Exception.class, errorType = CONNECTIVITY)
   public static class HeisenbergPointerPlusExternalConfig {
 
   }
@@ -700,6 +755,9 @@ public class AnnotationsBasedDescriberTestCase extends AbstractAnnotationsBasedD
   @Extension(name = OTHER_HEISENBERG, description = EXTENSION_DESCRIPTION)
   @Operations(HeisenbergAlternateConfig.class)
   @Configurations(HeisenbergAlternateConfig.class)
+  @ExceptionMapping(exceptionClass = HeisenbergException.class, errorType = CONNECTIVITY)
+  @ExceptionMapping(exceptionClass = IOException.class, errorType = CONNECTIVITY)
+  @ExceptionMapping(exceptionClass = HealthException.class, errorType = CONNECTIVITY)
   public static class HeisenbergWithSameOperationsAndConfigs extends HeisenbergExtension {
 
   }
@@ -718,6 +776,8 @@ public class AnnotationsBasedDescriberTestCase extends AbstractAnnotationsBasedD
 
   @Extension(name = OTHER_HEISENBERG, description = EXTENSION_DESCRIPTION)
   @Operations({HeisenbergExtension.class, GenericlessMessageOperation.class})
+  @ExceptionMapping(exceptionClass = MuleException.class, errorType = CONNECTIVITY)
+  @ExceptionMapping(exceptionClass = InitialisationException.class, errorType = CONNECTIVITY)
   public static class HeisenbergWithGenericlessMessageOperation {
 
   }
@@ -737,6 +797,19 @@ public class AnnotationsBasedDescriberTestCase extends AbstractAnnotationsBasedD
     }
   }
 
+  @ErrorType(value = "TYPE_A", parent = "TYPE_B")
+  @ErrorType(value = "TYPE_B", parent = "TYPE_C")
+  @ErrorType(value = "TYPE_C", parent = "TYPE_A")
+  @Extension(name = OTHER_HEISENBERG, description = EXTENSION_DESCRIPTION)
+  public static class HeisenbergWithCyclicErrorTypes extends HeisenbergExtension {
+
+  }
+
+  @ErrorType(value = "CHILD_TYPE", parent = "PARENT_TYPE")
+  @Extension(name = OTHER_HEISENBERG, description = EXTENSION_DESCRIPTION)
+  public static class HeisenbergWithErrorTypeWithInvalidParent extends HeisenbergExtension {
+
+  }
   public static class HeisenbergAlternateConfig extends HeisenbergExtension {
 
     @Parameter

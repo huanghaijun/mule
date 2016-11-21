@@ -6,6 +6,8 @@
  */
 package org.mule.runtime.core.exception;
 
+import static org.mule.runtime.api.error.Errors.CRITICAL;
+import static org.mule.runtime.api.error.Errors.UNKNOWN;
 import static org.mule.runtime.core.exception.ErrorTypeRepository.ANY_ERROR_TYPE;
 import static org.mule.runtime.core.exception.Errors.CORE_NAMESPACE_NAME;
 import static org.mule.runtime.core.exception.Errors.ComponentIdentifiers.CONNECTIVITY;
@@ -15,8 +17,6 @@ import static org.mule.runtime.core.exception.Errors.ComponentIdentifiers.RETRY_
 import static org.mule.runtime.core.exception.Errors.ComponentIdentifiers.ROUTING;
 import static org.mule.runtime.core.exception.Errors.ComponentIdentifiers.SECURITY;
 import static org.mule.runtime.core.exception.Errors.ComponentIdentifiers.TRANSFORMATION;
-import static org.mule.runtime.core.exception.Errors.Identifiers.CRITICAL_IDENTIFIER;
-import static org.mule.runtime.core.exception.Errors.Identifiers.UNKNOWN_ERROR_IDENTIFIER;
 import org.mule.runtime.api.connection.ConnectionException;
 import org.mule.runtime.api.message.ErrorType;
 import org.mule.runtime.core.api.expression.ExpressionRuntimeException;
@@ -40,7 +40,7 @@ public class ErrorTypeLocatorFactory {
    * Error type for which there's no clear reason for failure. Will be used when no specific match is found.
    */
   private static final ErrorType UNKNOWN_ERROR_TYPE =
-      ErrorTypeBuilder.builder().namespace(CORE_NAMESPACE_NAME).identifier(UNKNOWN_ERROR_IDENTIFIER)
+      ErrorTypeBuilder.builder().namespace(CORE_NAMESPACE_NAME).identifier(UNKNOWN)
           .parentErrorType(ANY_ERROR_TYPE).build();
 
   /**
@@ -48,7 +48,7 @@ public class ErrorTypeLocatorFactory {
    * If such an error occurs it will always be propagated.
    */
   public static final ErrorType CRITICAL_ERROR_TYPE =
-      ErrorTypeBuilder.builder().namespace(CORE_NAMESPACE_NAME).identifier(CRITICAL_IDENTIFIER)
+      ErrorTypeBuilder.builder().namespace(CORE_NAMESPACE_NAME).identifier(CRITICAL)
           .parentErrorType(null).build();
 
   /**
@@ -60,15 +60,15 @@ public class ErrorTypeLocatorFactory {
   public static ErrorTypeLocator createDefaultErrorTypeLocator(ErrorTypeRepository errorTypeRepository) {
     return ErrorTypeLocator.builder(errorTypeRepository)
         .defaultExceptionMapper(ExceptionMapper.builder()
-            .addExceptionMapping(MessageTransformerException.class, errorTypeRepository.lookupErrorType(TRANSFORMATION))
-            .addExceptionMapping(TransformerException.class, errorTypeRepository.lookupErrorType(TRANSFORMATION))
-            .addExceptionMapping(ExpressionRuntimeException.class, errorTypeRepository.lookupErrorType(EXPRESSION))
-            .addExceptionMapping(RoutingException.class, errorTypeRepository.lookupErrorType(ROUTING))
-            .addExceptionMapping(ConnectionException.class, errorTypeRepository.lookupErrorType(CONNECTIVITY))
-            .addExceptionMapping(RetryPolicyExhaustedException.class, errorTypeRepository.lookupErrorType(RETRY_EXHAUSTED))
-            .addExceptionMapping(IOException.class, errorTypeRepository.lookupErrorType(CONNECTIVITY))
-            .addExceptionMapping(SecurityException.class, errorTypeRepository.lookupErrorType(SECURITY))
-            .addExceptionMapping(MessageRedeliveredException.class, errorTypeRepository.lookupErrorType(REDELIVERY_EXHAUSTED))
+            .addExceptionMapping(MessageTransformerException.class, errorTypeRepository.lookupErrorType(TRANSFORMATION).get())
+            .addExceptionMapping(TransformerException.class, errorTypeRepository.lookupErrorType(TRANSFORMATION).get())
+            .addExceptionMapping(ExpressionRuntimeException.class, errorTypeRepository.lookupErrorType(EXPRESSION).get())
+            .addExceptionMapping(RoutingException.class, errorTypeRepository.lookupErrorType(ROUTING).get())
+            .addExceptionMapping(ConnectionException.class, errorTypeRepository.lookupErrorType(CONNECTIVITY).get())
+            .addExceptionMapping(RetryPolicyExhaustedException.class, errorTypeRepository.lookupErrorType(RETRY_EXHAUSTED).get())
+            .addExceptionMapping(IOException.class, errorTypeRepository.lookupErrorType(CONNECTIVITY).get())
+            .addExceptionMapping(SecurityException.class, errorTypeRepository.lookupErrorType(SECURITY).get())
+            .addExceptionMapping(MessageRedeliveredException.class, errorTypeRepository.lookupErrorType(REDELIVERY_EXHAUSTED).get())
             .addExceptionMapping(Exception.class, UNKNOWN_ERROR_TYPE)
             .addExceptionMapping(Error.class, CRITICAL_ERROR_TYPE)
             .build())

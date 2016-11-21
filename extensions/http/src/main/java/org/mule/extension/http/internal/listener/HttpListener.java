@@ -222,7 +222,7 @@ public class HttpListener extends Source<Object, HttpRequestAttributes> {
       throw new MuleRuntimeException(e);
     }
     ErrorTypeRepository errorTypeRepository = muleContext.getErrorTypeRepository();
-    knownErrors = Lists.newArrayList(errorTypeRepository.lookupErrorType(SECURITY));
+    knownErrors = Lists.newArrayList(errorTypeRepository.lookupErrorType(SECURITY).get());
     requestHandlerManager.start();
   }
 

@@ -6,15 +6,18 @@
  */
 package org.mule.test.heisenberg.extension;
 
+import static org.mule.runtime.api.error.Errors.CONNECTIVITY;
 import static org.mule.runtime.api.meta.Category.SELECT;
 import static org.mule.runtime.api.meta.ExpressionSupport.NOT_SUPPORTED;
 import static org.mule.runtime.api.meta.ExpressionSupport.REQUIRED;
-import org.mule.runtime.core.api.Event;
-import org.mule.runtime.core.api.MuleContext;
+import static org.mule.test.heisenberg.extension.HeisenbergExtension.HEISENBERG_CONNECTION;
+
 import org.mule.runtime.api.exception.MuleException;
-import org.mule.runtime.core.api.context.MuleContextAware;
 import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.api.lifecycle.Lifecycle;
+import org.mule.runtime.core.api.Event;
+import org.mule.runtime.core.api.MuleContext;
+import org.mule.runtime.core.api.context.MuleContextAware;
 import org.mule.runtime.extension.api.ExtensionManager;
 import org.mule.runtime.extension.api.annotation.Alias;
 import org.mule.runtime.extension.api.annotation.Export;
@@ -23,17 +26,20 @@ import org.mule.runtime.extension.api.annotation.Extensible;
 import org.mule.runtime.extension.api.annotation.Extension;
 import org.mule.runtime.extension.api.annotation.OnException;
 import org.mule.runtime.extension.api.annotation.Operations;
-import org.mule.runtime.extension.api.annotation.param.Parameter;
-import org.mule.runtime.extension.api.annotation.param.ParameterGroup;
 import org.mule.runtime.extension.api.annotation.Sources;
 import org.mule.runtime.extension.api.annotation.SubTypeMapping;
 import org.mule.runtime.extension.api.annotation.connectivity.ConnectionProviders;
+import org.mule.runtime.extension.api.annotation.error.ErrorType;
+import org.mule.runtime.extension.api.annotation.error.ExceptionMapping;
 import org.mule.runtime.extension.api.annotation.param.ConfigName;
 import org.mule.runtime.extension.api.annotation.param.Optional;
+import org.mule.runtime.extension.api.annotation.param.Parameter;
+import org.mule.runtime.extension.api.annotation.param.ParameterGroup;
 import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
 import org.mule.runtime.extension.api.annotation.param.display.Placement;
 import org.mule.runtime.extension.api.annotation.param.display.Summary;
 import org.mule.runtime.extension.api.annotation.param.display.Text;
+import org.mule.test.heisenberg.extension.exception.HealthException;
 import org.mule.test.heisenberg.extension.exception.HeisenbergConnectionExceptionEnricher;
 import org.mule.test.heisenberg.extension.exception.HeisenbergException;
 import org.mule.test.heisenberg.extension.model.CarDealer;
@@ -46,14 +52,14 @@ import org.mule.test.heisenberg.extension.model.Ricin;
 import org.mule.test.heisenberg.extension.model.Weapon;
 import org.mule.test.heisenberg.extension.model.types.WeaponType;
 
+import javax.inject.Inject;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
-
-import javax.inject.Inject;
 
 @Extension(name = HeisenbergExtension.HEISENBERG, description = HeisenbergExtension.EXTENSION_DESCRIPTION, category = SELECT,
     minMuleVersion = "4.1")
@@ -65,6 +71,11 @@ import javax.inject.Inject;
 @Export(classes = {HeisenbergException.class})
 @SubTypeMapping(baseType = Weapon.class, subTypes = {Ricin.class})
 @SubTypeMapping(baseType = Investment.class, subTypes = {CarWash.class, CarDealer.class})
+@ErrorType(value = HEISENBERG_CONNECTION, parent = CONNECTIVITY)
+@ExceptionMapping(exceptionClass = HeisenbergException.class, errorType = HEISENBERG_CONNECTION)
+@ExceptionMapping(exceptionClass = HealthException.class, errorType = HEISENBERG_CONNECTION)
+@ExceptionMapping(exceptionClass = IOException.class, errorType = HEISENBERG_CONNECTION)
+
 public class HeisenbergExtension implements Lifecycle, MuleContextAware {
 
   public static final String HEISENBERG = "Heisenberg";
@@ -75,6 +86,7 @@ public class HeisenbergExtension implements Lifecycle, MuleContextAware {
   public static final String PERSONAL_INFORMATION_GROUP_NAME = "Personal Information";
   public static final String PARAMETER_OVERRIDED_DISPLAY_NAME = "Parameter Custom Display Name";
   public static final String PARAMETER_ORIGINAL_OVERRIDED_DISPLAY_NAME = "weaponValueMap";
+  public static final String HEISENBERG_CONNECTION = "HEISENBERG_CONNECTION";
 
   private int initialise = 0;
   private int start = 0;
