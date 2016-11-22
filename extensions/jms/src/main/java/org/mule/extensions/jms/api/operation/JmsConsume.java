@@ -6,9 +6,9 @@
  */
 package org.mule.extensions.jms.api.operation;
 
-import static org.mule.extensions.jms.api.operation.JmsOperationUtils.evaluateMessageAck;
-import static org.mule.extensions.jms.api.operation.JmsOperationUtils.resolveOverride;
-import static org.mule.extensions.jms.internal.function.JmsSupplier.wrappedSupplier;
+import static org.mule.extensions.jms.api.operation.JmsOperationCommons.evaluateMessageAck;
+import static org.mule.extensions.jms.api.operation.JmsOperationCommons.resolveConsumeMessage;
+import static org.mule.extensions.jms.api.operation.JmsOperationCommons.resolveOverride;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
 import org.mule.extensions.jms.api.config.AckMode;
 import org.mule.extensions.jms.api.config.JmsConsumerConfig;
@@ -29,7 +29,6 @@ import org.mule.runtime.extension.api.annotation.param.display.Summary;
 import org.mule.runtime.extension.api.runtime.operation.Result;
 
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 
 import javax.jms.Destination;
 import javax.jms.Message;
@@ -110,16 +109,6 @@ public class JmsConsume {
       LOGGER.error("An error occurred while consuming a message: ", e);
 
       throw new JmsExtensionException(createStaticMessage("An error occurred while consuming a message: "), e);
-    }
-  }
-
-  private Supplier<Message> resolveConsumeMessage(Long maximumWaitTime, MessageConsumer consumer) {
-    if (maximumWaitTime == -1) {
-      return wrappedSupplier(consumer::receive);
-    } else if (maximumWaitTime == 0) {
-      return wrappedSupplier(consumer::receiveNoWait);
-    } else {
-      return wrappedSupplier(() -> consumer.receive(maximumWaitTime));
     }
   }
 

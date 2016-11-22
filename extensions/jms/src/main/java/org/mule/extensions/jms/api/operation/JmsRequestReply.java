@@ -6,21 +6,20 @@
  */
 package org.mule.extensions.jms.api.operation;
 
-import static java.lang.String.format;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
 import static org.mule.extensions.jms.api.config.AckMode.AUTO;
 import static org.mule.extensions.jms.api.config.AckMode.NONE;
-import static org.mule.extensions.jms.api.connection.JmsSpecification.JMS_2_0;
-import static org.mule.extensions.jms.api.operation.JmsOperationUtils.evaluateMessageAck;
-import static org.mule.extensions.jms.api.operation.JmsOperationUtils.resolveOverride;
-import static org.mule.extensions.jms.internal.function.JmsSupplier.wrappedSupplier;
-import static org.mule.runtime.api.util.Preconditions.checkArgument;
+import static org.mule.extensions.jms.api.connection.JmsSpecification.JMS_1_0_2b;
+import static org.mule.extensions.jms.api.operation.JmsOperationCommons.createProducer;
+import static org.mule.extensions.jms.api.operation.JmsOperationCommons.evaluateMessageAck;
+import static org.mule.extensions.jms.api.operation.JmsOperationCommons.resolveConsumeMessage;
+import static org.mule.extensions.jms.api.operation.JmsOperationCommons.resolveDeliveryDelay;
+import static org.mule.extensions.jms.api.operation.JmsOperationCommons.resolveOverride;
+import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
 import org.mule.extensions.jms.api.config.AckMode;
 import org.mule.extensions.jms.api.config.JmsProducerConfig;
 import org.mule.extensions.jms.api.connection.JmsConnection;
 import org.mule.extensions.jms.api.connection.JmsSession;
-import org.mule.extensions.jms.api.connection.JmsSpecification;
+import org.mule.extensions.jms.api.destination.ConsumerType;
 import org.mule.extensions.jms.api.destination.QueueConsumer;
 import org.mule.extensions.jms.api.destination.TopicConsumer;
 import org.mule.extensions.jms.api.exception.JmsExtensionException;
@@ -37,7 +36,6 @@ import org.mule.runtime.extension.api.annotation.param.display.Summary;
 import org.mule.runtime.extension.api.runtime.operation.Result;
 
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
@@ -45,7 +43,6 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
-import javax.jms.Session;
 import javax.jms.Topic;
 
 import org.slf4j.Logger;
@@ -105,38 +102,46 @@ public class JmsRequestReply {
 
     java.util.Optional<Long> delay = resolveDeliveryDelay(connection.getJmsSupport().getSpecification(),
                                                           config, deliveryDelay, deliveryDelayUnit);
-
     persistentDelivery = resolveOverride(config.isPersistentDelivery(), persistentDelivery);
     priority = resolveOverride(config.getPriority(), priority);
     timeToLive = resolveOverride(config.getTimeToLiveUnit(), timeToLiveUnit)
         .toMillis(resolveOverride(config.getTimeToLive(), timeToLive));
 
+    JmsSession session;
+    Message message;
+    ConsumerType replyConsumerType;
     try {
-      // TODO refactor this with JmsPublish and JmsConsume operation
       if (LOGGER.isDebugEnabled()) {
         LOGGER.debug("Begin publish");
       }
 
       JmsSupport jmsSupport = connection.getJmsSupport();
-      JmsSession session = connection.createSession(AUTO, isTopic);
+      session = connection.createSession(AUTO, isTopic);
 
-      Message message = messageBuilder.build(jmsSupport, session.get(), config);
-      boolean replyToTopic = setReplyDestination(isTopic, messageBuilder, session, jmsSupport, message);
+      message = messageBuilder.build(jmsSupport, session.get(), config);
+      replyConsumerType = setReplyDestination(isTopic, messageBuilder, session, jmsSupport, message);
+
+      validateReplyToSessionSupport(isTopic, replyConsumerType, jmsSupport);
 
       if (LOGGER.isDebugEnabled()) {
         LOGGER.debug("Message built, sending message");
       }
 
       Destination jmsDestination = jmsSupport.createDestination(session.get(), destination, isTopic);
-      MessageProducer producer = createProducer(connection, config, isTopic, session.get(), delay, jmsDestination);
+      MessageProducer producer = createProducer(connection, config, isTopic, session.get(),
+                                                delay, jmsDestination, LOGGER);
       jmsSupport.send(producer, message, jmsDestination, persistentDelivery, priority, timeToLive, isTopic);
 
       if (LOGGER.isDebugEnabled()) {
         LOGGER.debug("Message Sent, prepare for response");
       }
+    } catch (Exception e) {
+      LOGGER.error("An error occurred while sending a message: ", e);
+      throw new JmsExtensionException(createStaticMessage("An error occurred while sending a message to %s: ", destination), e);
+    }
 
-      MessageConsumer consumer = connection.createConsumer(session.get(), message.getJMSReplyTo(), "",
-                                                           replyToTopic ? new TopicConsumer() : new QueueConsumer());
+    try {
+      MessageConsumer consumer = connection.createConsumer(session.get(), message.getJMSReplyTo(), "", replyConsumerType);
 
       if (LOGGER.isDebugEnabled()) {
         LOGGER.debug("Waiting for incoming message");
@@ -150,95 +155,41 @@ public class JmsRequestReply {
         LOGGER.debug("Creating response result");
       }
 
-      return resultFactory.createResult(received, jmsSupport.getSpecification(),
+      return resultFactory.createResult(received, connection.getJmsSupport().getSpecification(),
                                         resolveOverride(config.getContentType(), messageBuilder.getContentType()),
                                         resolveOverride(config.getEncoding(), encoding),
                                         session.getAckId());
     } catch (Exception e) {
-      LOGGER.error("An error occurred while sending a message: ", e);
+      LOGGER.error("An error occurred while listening for the reply: ", e);
+      throw new JmsExtensionException(createStaticMessage("An error occurred while listening for the reply: "), e);
     }
-
-    return Result.<Object, JmsAttributes>builder().build();
   }
 
-  private boolean setReplyDestination(boolean isTopic, MessageBuilder messageBuilder,
-                                      JmsSession session, JmsSupport jmsSupport, Message message)
+  private void validateReplyToSessionSupport(boolean requestDestinationIsTopic, ConsumerType replyConsumerType,
+                                             JmsSupport jmsSupport)
+      throws JmsExtensionException {
+    if (jmsSupport.getSpecification().equals(JMS_1_0_2b) &&
+        (requestDestinationIsTopic != replyConsumerType.isTopic())) {
+      throw new JmsExtensionException(createStaticMessage("Replying to a different kind of Destination than the one used for request is not supported in JMS 1.0.2b specification."));
+    }
+  }
+
+  private ConsumerType setReplyDestination(boolean isTopic, MessageBuilder messageBuilder,
+                                           JmsSession session, JmsSupport jmsSupport, Message message)
       throws JMSException {
+
+    boolean topicConsumer;
     if (message.getJMSReplyTo() != null) {
-      return messageBuilder.getReplyTo().isTopic();
+      topicConsumer = messageBuilder.getReplyTo().isTopic();
     } else {
       if (LOGGER.isDebugEnabled()) {
         LOGGER.debug("Using temporary destination");
       }
       // Resolve using a temporary destination and the current destination type
       message.setJMSReplyTo(jmsSupport.createTemporaryDestination(session.get(), isTopic));
-      return isTopic;
+      topicConsumer = isTopic;
     }
-  }
-
-  private MessageProducer createProducer(JmsConnection connection, JmsProducerConfig config, boolean isTopic,
-                                         Session session, java.util.Optional<Long> deliveryDelay, Destination jmsDestination)
-      throws JMSException {
-
-    MessageProducer producer = connection.createProducer(session, jmsDestination, isTopic);
-
-    setDisableMessageID(producer, config.isDisableMessageId());
-    setDisableMessageTimestamp(producer, config.isDisableMessageTimestamp());
-    if (deliveryDelay.isPresent()) {
-      setDeliveryDelay(producer, deliveryDelay.get());
-    }
-
-    return producer;
-  }
-
-  private void setDeliveryDelay(MessageProducer producer, Long value) {
-    try {
-      producer.setDeliveryDelay(value);
-    } catch (JMSException e) {
-      LOGGER.error("Failed to configure [setDeliveryDelay] in MessageProducer: ", e);
-    }
-  }
-
-  private void setDisableMessageID(MessageProducer producer, boolean value) {
-    try {
-      producer.setDisableMessageID(value);
-    } catch (JMSException e) {
-      LOGGER.error("Failed to configure [setDisableMessageID] in MessageProducer: ", e);
-    }
-  }
-
-  private void setDisableMessageTimestamp(MessageProducer producer, boolean value) {
-    try {
-      producer.setDisableMessageTimestamp(value);
-    } catch (JMSException e) {
-      LOGGER.error("Failed to configure [setDisableMessageTimestamp] in MessageProducer: ", e);
-    }
-  }
-
-  private java.util.Optional<Long> resolveDeliveryDelay(JmsSpecification specification, JmsProducerConfig config,
-                                                        Long deliveryDelay, TimeUnit unit) {
-    Long delay = resolveOverride(config.getDeliveryDelay(), deliveryDelay);
-    TimeUnit timeUnit = resolveOverride(config.getDeliveryDelayToLiveUnit(), unit);
-
-    checkArgument(specification.equals(JMS_2_0) || delay == null,
-                  format("[deliveryDelay] is only supported on JMS 2.0 specification,"
-                      + " but current configuration is set to JMS %s", specification.getName()));
-
-    if (delay != null) {
-      return of(timeUnit.toMillis(delay));
-    }
-
-    return empty();
-  }
-
-  private Supplier<Message> resolveConsumeMessage(Long maximumWaitTime, MessageConsumer consumer) {
-    if (maximumWaitTime == -1) {
-      return wrappedSupplier(consumer::receive);
-    } else if (maximumWaitTime == 0) {
-      return wrappedSupplier(consumer::receiveNoWait);
-    } else {
-      return wrappedSupplier(() -> consumer.receive(maximumWaitTime));
-    }
+    return topicConsumer ? new TopicConsumer() : new QueueConsumer();
   }
 
 }

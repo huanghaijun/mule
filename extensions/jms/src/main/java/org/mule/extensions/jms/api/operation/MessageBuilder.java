@@ -9,7 +9,7 @@ package org.mule.extensions.jms.api.operation;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.mule.extensions.jms.api.operation.JmsOperationUtils.resolveOverride;
+import static org.mule.extensions.jms.api.operation.JmsOperationCommons.resolveOverride;
 import static org.mule.extensions.jms.internal.message.JMSXDefinedPropertiesNames.JMSX_NAMES;
 import static org.mule.extensions.jms.internal.message.JmsMessageUtils.encodeHeader;
 import static org.mule.extensions.jms.internal.message.JmsMessageUtils.toMessage;

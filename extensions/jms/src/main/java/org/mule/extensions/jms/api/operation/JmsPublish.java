@@ -6,9 +6,11 @@
  */
 package org.mule.extensions.jms.api.operation;
 
+import static java.lang.String.format;
 import static org.mule.extensions.jms.api.config.AckMode.AUTO;
-import static org.mule.extensions.jms.api.operation.JmsOperationUtils.resolveDeliveryDelay;
-import static org.mule.extensions.jms.api.operation.JmsOperationUtils.resolveOverride;
+import static org.mule.extensions.jms.api.operation.JmsOperationCommons.createProducer;
+import static org.mule.extensions.jms.api.operation.JmsOperationCommons.resolveDeliveryDelay;
+import static org.mule.extensions.jms.api.operation.JmsOperationCommons.resolveOverride;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
 import org.mule.extensions.jms.api.config.JmsProducerConfig;
 import org.mule.extensions.jms.api.connection.JmsConnection;
@@ -25,10 +27,8 @@ import java.util.concurrent.TimeUnit;
 
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
-import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
-import javax.jms.Session;
 import javax.jms.Topic;
 
 import org.slf4j.Logger;
@@ -82,7 +82,6 @@ public class JmsPublish {
         .toMillis(resolveOverride(config.getTimeToLive(), timeToLive));
 
     try {
-
       if (LOGGER.isDebugEnabled()) {
         LOGGER.debug("Begin publish");
       }
@@ -91,59 +90,19 @@ public class JmsPublish {
       Message message = messageBuilder.build(connection.getJmsSupport(), session.get(), config);
 
       if (LOGGER.isDebugEnabled()) {
-        LOGGER.debug("Message built, sending message");
+        LOGGER.debug(format("Message built, sending message to %s", destination));
       }
 
       JmsSupport jmsSupport = connection.getJmsSupport();
       Destination jmsDestination = jmsSupport.createDestination(session.get(), destination, isTopic);
 
-      MessageProducer producer = createProducer(connection, config, isTopic, session.get(), delay, jmsDestination);
+      MessageProducer producer = createProducer(connection, config, isTopic, session.get(), delay, jmsDestination, LOGGER);
       jmsSupport.send(producer, message, jmsDestination, persistentDelivery, priority, timeToLive, isTopic);
 
     } catch (Exception e) {
       LOGGER.error("An error occurred while sending a message: ", e);
-
-      throw new JmsExtensionException(createStaticMessage("An error occurred while sending a message: "), e);
-
+      throw new JmsExtensionException(createStaticMessage("An error occurred while sending a message to %s: ", destination), e);
     }
   }
 
-  private MessageProducer createProducer(JmsConnection connection, JmsProducerConfig config, boolean isTopic,
-                                         Session session, java.util.Optional<Long> deliveryDelay, Destination jmsDestination)
-      throws JMSException {
-
-    MessageProducer producer = connection.createProducer(session, jmsDestination, isTopic);
-
-    setDisableMessageID(producer, config.isDisableMessageId());
-    setDisableMessageTimestamp(producer, config.isDisableMessageTimestamp());
-    if (deliveryDelay.isPresent()) {
-      setDeliveryDelay(producer, deliveryDelay.get());
-    }
-
-    return producer;
-  }
-
-  private void setDeliveryDelay(MessageProducer producer, Long value) {
-    try {
-      producer.setDeliveryDelay(value);
-    } catch (JMSException e) {
-      LOGGER.error("Failed to configure [setDeliveryDelay] in MessageProducer: ", e);
-    }
-  }
-
-  private void setDisableMessageID(MessageProducer producer, boolean value) {
-    try {
-      producer.setDisableMessageID(value);
-    } catch (JMSException e) {
-      LOGGER.error("Failed to configure [setDisableMessageID] in MessageProducer: ", e);
-    }
-  }
-
-  private void setDisableMessageTimestamp(MessageProducer producer, boolean value) {
-    try {
-      producer.setDisableMessageTimestamp(value);
-    } catch (JMSException e) {
-      LOGGER.error("Failed to configure [setDisableMessageTimestamp] in MessageProducer: ", e);
-    }
-  }
 }
