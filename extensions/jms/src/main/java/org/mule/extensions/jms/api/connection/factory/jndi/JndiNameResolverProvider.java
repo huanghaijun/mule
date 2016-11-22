@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
  * @since 4.0
  */
 @ExclusiveOptionals(isOneRequired = true)
-public class JndiNameResolverProvider {
+public final class JndiNameResolverProvider {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(JndiNameResolverProvider.class);
 

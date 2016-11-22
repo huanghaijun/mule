@@ -6,28 +6,19 @@
       http://www.mulesoft.org/schema/mule/jmsn http://www.mulesoft.org/schema/mule/jmsn/current/mule-jmsn.xsd">
 
     <flow name="publisher">
-        <jmsn:publish config-ref="producer" destination="#[flowVars.replyToDestination]" isTopic="true">
-            <jmsn:message-builder>
-                <jmsn:content>#[payload]</jmsn:content>
-            </jmsn:message-builder>
-        </jmsn:publish>
+        <jmsn:publish config-ref="config" destination="#[flowVars.replyToDestination]" destinationType="TOPIC"/>
     </flow>
 
     <flow name="request-reply">
-        <jmsn:request-reply config-ref="producer" destination="#[flowVars.requestDestination]" isTopic="true" maximumWaitTime="1000">
+        <jmsn:publish-consume config-ref="config" destination="#[flowVars.requestDestination]" maximumWaitTime="1000">
             <jmsn:message-builder>
-                <jmsn:content>#[payload]</jmsn:content>
-                <jmsn:reply-to destination="#[flowVars.replyToDestination]" isTopic="true"/>
+                <jmsn:reply-to destination="#[flowVars.replyToDestination]" destinationType="TOPIC"/>
             </jmsn:message-builder>
-        </jmsn:request-reply>
+        </jmsn:publish-consume>
     </flow>
 
     <flow name="request-listener">
-        <jmsn:consume config-ref="consumer" destination="#[flowVars.requestDestination]" maximumWaitTime="1000">
-            <jmsn:consumer-type>
-                <jmsn:topic-consumer/>
-            </jmsn:consumer-type>
-        </jmsn:consume>
+        <jmsn:consume config-ref="config" destination="#[flowVars.requestDestination]" maximumWaitTime="1000"/>
     </flow>
 
 </mule>

@@ -22,7 +22,7 @@ import org.apache.activemq.RedeliveryPolicy;
  *
  * @since 4.0
  */
-public class ActiveMQConnectionFactoryConfiguration {
+public final class ActiveMQConnectionFactoryConfiguration {
 
   private static final String DEFAULT_BROKER_URL = "vm://localhost?broker.useJmx=false";
 

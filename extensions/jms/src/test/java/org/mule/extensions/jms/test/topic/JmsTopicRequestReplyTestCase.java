@@ -19,6 +19,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 import org.junit.Test;
+import ru.yandex.qatools.allure.annotations.Description;
 
 
 public class JmsTopicRequestReplyTestCase extends JmsAbstractTestCase {
@@ -42,6 +43,7 @@ public class JmsTopicRequestReplyTestCase extends JmsAbstractTestCase {
   }
 
   @Test
+  @Description("Checks that a message can be sent and then wait for the reply to an explicit replyTo destination")
   public void requestReplyExplicitReplyDestination() throws Exception {
     ExecutorService executor = newFixedThreadPool(2);
 

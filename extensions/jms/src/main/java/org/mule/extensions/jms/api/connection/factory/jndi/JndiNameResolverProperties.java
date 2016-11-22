@@ -19,7 +19,7 @@ import javax.naming.InitialContext;
  *
  * @since 4.0
  */
-public class JndiNameResolverProperties {
+public final class JndiNameResolverProperties {
 
   /**
    * The fully qualified class name of the factory class that will create an {@link InitialContext}

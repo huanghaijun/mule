@@ -18,7 +18,7 @@ import javax.naming.NamingException;
  *
  * @since 4.0
  */
-public class SimpleJndiNameResolver extends AbstractJndiNameResolver {
+public final class SimpleJndiNameResolver extends AbstractJndiNameResolver {
 
   private Context jndiContext;
 

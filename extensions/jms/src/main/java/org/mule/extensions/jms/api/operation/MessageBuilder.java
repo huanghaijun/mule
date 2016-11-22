@@ -13,7 +13,8 @@ import static org.mule.extensions.jms.api.operation.JmsOperationCommons.resolveO
 import static org.mule.extensions.jms.internal.message.JMSXDefinedPropertiesNames.JMSX_NAMES;
 import static org.mule.extensions.jms.internal.message.JmsMessageUtils.encodeHeader;
 import static org.mule.extensions.jms.internal.message.JmsMessageUtils.toMessage;
-import org.mule.extensions.jms.api.config.JmsProducerConfig;
+import org.mule.extensions.jms.api.config.JmsConfig;
+import org.mule.extensions.jms.api.config.JmsProducerProperties;
 import org.mule.extensions.jms.api.destination.JmsDestination;
 import org.mule.extensions.jms.api.exception.DestinationNotFoundException;
 import org.mule.extensions.jms.api.message.JmsxProperties;
@@ -119,11 +120,11 @@ public class MessageBuilder {
    * Creates a {@link Message} based on the provided configurations
    * @param jmsSupport the {@link JmsSupport} used to create the JMSReplyTo {@link Destination}
    * @param session the current {@link Session}
-   * @param config the current {@link JmsProducerConfig}
+   * @param config the current {@link JmsProducerProperties}
    * @return the {@link Message} created by the user
    * @throws JMSException if an error occurs
    */
-  Message build(JmsSupport jmsSupport, Session session, JmsProducerConfig config)
+  Message build(JmsSupport jmsSupport, Session session, JmsConfig config)
       throws JMSException {
 
     config.getEncoding();
@@ -131,7 +132,7 @@ public class MessageBuilder {
     Message message = toMessage(content, session);
 
     setJmsCorrelationIdHeader(message);
-    setJmsTypeHeader(config, message);
+    setJmsTypeHeader(config.getProducerConfig(), message);
     setJmsReplyToHeader(jmsSupport, session, message, replyTo);
 
     setJmsxProperties(message);
@@ -146,9 +147,13 @@ public class MessageBuilder {
 
   private void setJmsReplyToHeader(JmsSupport jmsSupport, Session session, Message message, JmsDestination replyDestination) {
     try {
-      if (replyDestination != null) {
-        Destination destination = jmsSupport.createDestination(session,
-                                                               replyDestination.getDestination(), replyDestination.isTopic());
+
+      // TODO NullSafe should not propagate default objects unless inner NullSafe is declared
+
+      if (replyDestination != null &&
+          !isBlank(replyDestination.getDestination())) {
+        Destination destination = jmsSupport.createDestination(session, replyDestination.getDestination(),
+                                                               replyDestination.getDestinationType().isTopic());
         message.setJMSReplyTo(destination);
       }
     } catch (DestinationNotFoundException | JMSException e) {
@@ -156,7 +161,7 @@ public class MessageBuilder {
     }
   }
 
-  private void setContentTypeProperty(JmsProducerConfig config, Message message) {
+  private void setContentTypeProperty(JmsConfig config, Message message) {
     try {
       message.setStringProperty(CONTENT_TYPE_JMS_PROPERTY, resolveOverride(config.getContentType(), contentType));
     } catch (JMSException e) {
@@ -193,7 +198,7 @@ public class MessageBuilder {
   }
 
 
-  private void setJmsTypeHeader(JmsProducerConfig config, Message message) {
+  private void setJmsTypeHeader(JmsProducerProperties config, Message message) {
     try {
       String type = resolveOverride(config.getJmsType(), jmsType);
       if (!isBlank(type)) {

@@ -216,14 +216,14 @@ public class Jms20Support implements JmsSupport {
    * {@inheritDoc}
    */
   @Override
-  public Destination createTemporaryDestination(Session session, boolean isTopic) throws JMSException {
+  public Destination createTemporaryDestination(Session session) throws JMSException {
     checkArgument(session != null, "Session cannot be null when creating a destination");
 
     if (LOGGER.isDebugEnabled()) {
-      LOGGER.debug(format("Creating temporary destination of type: [%s]", isTopic ? "Topic" : "Queue"));
+      LOGGER.debug(format("Creating temporary destination"));
     }
 
-    return isTopic ? session.createTemporaryTopic() : session.createTemporaryQueue();
+    return session.createTemporaryQueue();
   }
 
   /**

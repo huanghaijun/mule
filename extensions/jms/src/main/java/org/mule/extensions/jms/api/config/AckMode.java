@@ -20,16 +20,39 @@ import javax.jms.Session;
  *
  * If a session is not transacted, there are four acknowledgment options:
  *
- * AUTO: Mule acks the message only if the flow is finished successfully.
+ * AUTO: Mule ACKs the message only if the flow is finished successfully.
  * MANUAL: This is JMS {@link Session#CLIENT_ACKNOWLEDGE} mode. The user must do the ack manually within the flow.
  * DUPS_OK: JMS message is acked automatically but in a lazy fashion which may lead to duplicates.
- * NONE: Mule automatically acks the message upon reception.
+ * NONE: Mule automatically ACKs the message upon reception.
  *
  * @since 4.0
  */
 public enum AckMode {
 
-  NONE(0), AUTO(AUTO_ACKNOWLEDGE), MANUAL(CLIENT_ACKNOWLEDGE), DUPS_OK(DUPS_OK_ACKNOWLEDGE), TRANSACTED(SESSION_TRANSACTED);
+  /**
+   * Mule automatically ACKs the message upon reception
+   */
+  NONE(0),
+
+  /**
+   * Mule ACKs the message only if the flow is finished successfully
+   */
+  AUTO(AUTO_ACKNOWLEDGE),
+
+  /**
+   * This is JMS {@link Session#CLIENT_ACKNOWLEDGE} mode. The user must do the ACK manually within the flow
+   */
+  MANUAL(CLIENT_ACKNOWLEDGE),
+
+  /**
+   * JMS message is acked automatically but in a lazy fashion which may lead to duplicates
+   */
+  DUPS_OK(DUPS_OK_ACKNOWLEDGE),
+
+  /**
+   * Transacted Session don't have ACK
+   */
+  TRANSACTED(SESSION_TRANSACTED);
 
   private final int ackMode;
 

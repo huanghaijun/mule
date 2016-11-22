@@ -36,7 +36,7 @@ import org.springframework.jms.connection.DelegatingConnectionFactory;
  *
  * @since 4.0
  */
-public class JndiConnectionFactory extends DelegatingConnectionFactory implements Lifecycle {
+public final class JndiConnectionFactory extends DelegatingConnectionFactory implements Lifecycle {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(JndiConnectionFactory.class);
 
@@ -55,7 +55,7 @@ public class JndiConnectionFactory extends DelegatingConnectionFactory implement
   private LookupJndiDestination lookupDestination;
 
   /**
-   *  Provider for the {@link NameResolver}
+   *  Provider for the {@link JndiNameResolver}
    */
   @ParameterGroup
   private JndiNameResolverProvider nameResolverProvider;

@@ -17,7 +17,7 @@ import javax.jms.JMSException;
  *
  * @since 4.0
  */
-public class JmsCallbackConnectionException extends MuleRuntimeException {
+public final class JmsCallbackConnectionException extends MuleRuntimeException {
 
   public JmsCallbackConnectionException(JMSException e) {
     super(e);

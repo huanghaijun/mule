@@ -9,11 +9,9 @@ package org.mule.extensions.jms.api.config;
 import static org.mule.runtime.api.meta.ExpressionSupport.NOT_SUPPORTED;
 import static org.mule.runtime.extension.api.annotation.param.display.Placement.ADVANCED;
 import org.mule.extensions.jms.api.connection.JmsSpecification;
-import org.mule.extensions.jms.api.operation.JmsPublish;
-import org.mule.extensions.jms.api.operation.JmsRequestReply;
-import org.mule.runtime.extension.api.annotation.Configuration;
+import org.mule.runtime.extension.api.annotation.Alias;
 import org.mule.runtime.extension.api.annotation.Expression;
-import org.mule.runtime.extension.api.annotation.Operations;
+import org.mule.runtime.extension.api.annotation.dsl.xml.XmlHints;
 import org.mule.runtime.extension.api.annotation.param.Optional;
 import org.mule.runtime.extension.api.annotation.param.Parameter;
 import org.mule.runtime.extension.api.annotation.param.display.Placement;
@@ -25,13 +23,12 @@ import javax.jms.DeliveryMode;
 import javax.jms.Message;
 
 /**
- * Configuration for sending messages to a JMS Queue or Topic
+ * Configuration parameters for sending messages to a JMS Queue or Topic
  *
  * @since 4.0
  */
-@Configuration(name = "producer-config")
-@Operations({JmsPublish.class, JmsRequestReply.class})
-public class JmsProducerConfig extends JmsBaseConfig {
+@XmlHints(allowTopLevelDefinition = true)
+public class JmsProducerProperties {
 
   /**
    * Sets the default value for the {@link Message#getJMSDeliveryMode}.
@@ -122,7 +119,7 @@ public class JmsProducerConfig extends JmsBaseConfig {
   @Expression(NOT_SUPPORTED)
   @Placement(tab = ADVANCED, group = "Delivery Delay", order = 1)
   @Summary("Only used by JMS 2.0: Time unit to be used in the deliveryDelay configurations.")
-  private TimeUnit deliveryDelayToLiveUnit;
+  private TimeUnit deliveryDelayUnit;
 
   /**
    * A message JMSType identifier supplied by a client when a message is sent.
@@ -161,8 +158,8 @@ public class JmsProducerConfig extends JmsBaseConfig {
     return deliveryDelay;
   }
 
-  public TimeUnit getDeliveryDelayToLiveUnit() {
-    return deliveryDelayToLiveUnit;
+  public TimeUnit getDeliveryDelayUnit() {
+    return deliveryDelayUnit;
   }
 
   public String getJmsType() {

@@ -9,12 +9,8 @@
 
     <spring:bean name="customConnectionFactory" class="org.mule.extensions.jms.test.infra.JmsTestConnectionFactory"/>
 
-    <jmsn:consumer-config name="consumer">
+    <jmsn:config name="config">
         <jmsn:generic-connection connectionFactory="customConnectionFactory"/>
-    </jmsn:consumer-config>
-
-    <jmsn:producer-config name="producer">
-        <jmsn:generic-connection connectionFactory="customConnectionFactory"/>
-    </jmsn:producer-config>
+    </jmsn:config>
 
 </mule>

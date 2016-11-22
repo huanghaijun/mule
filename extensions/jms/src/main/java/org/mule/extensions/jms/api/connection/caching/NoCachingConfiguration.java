@@ -22,7 +22,7 @@ import javax.jms.ConnectionFactory;
  * @since 4,0
  */
 @Alias("no-caching")
-public class NoCachingConfiguration implements CachingStrategy {
+public final class NoCachingConfiguration implements CachingStrategy {
 
   /**
    * {@inheritDoc}

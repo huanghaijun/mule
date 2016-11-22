@@ -8,15 +8,15 @@ package org.mule.extensions.jms.api.operation;
 
 import static org.mule.extensions.jms.api.config.AckMode.AUTO;
 import static org.mule.extensions.jms.api.config.AckMode.NONE;
-import static org.mule.extensions.jms.api.connection.JmsSpecification.JMS_1_0_2b;
-import static org.mule.extensions.jms.api.operation.JmsOperationCommons.createProducer;
 import static org.mule.extensions.jms.api.operation.JmsOperationCommons.evaluateMessageAck;
-import static org.mule.extensions.jms.api.operation.JmsOperationCommons.resolveConsumeMessage;
 import static org.mule.extensions.jms.api.operation.JmsOperationCommons.resolveDeliveryDelay;
 import static org.mule.extensions.jms.api.operation.JmsOperationCommons.resolveOverride;
+import static org.mule.extensions.jms.internal.function.JmsSupplier.wrappedSupplier;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
+import static org.slf4j.LoggerFactory.getLogger;
 import org.mule.extensions.jms.api.config.AckMode;
-import org.mule.extensions.jms.api.config.JmsProducerConfig;
+import org.mule.extensions.jms.api.config.JmsConfig;
+import org.mule.extensions.jms.api.config.JmsProducerProperties;
 import org.mule.extensions.jms.api.connection.JmsConnection;
 import org.mule.extensions.jms.api.connection.JmsSession;
 import org.mule.extensions.jms.api.destination.ConsumerType;
@@ -30,12 +30,14 @@ import org.mule.extensions.jms.internal.support.JmsSupport;
 import org.mule.runtime.extension.api.annotation.dsl.xml.XmlHints;
 import org.mule.runtime.extension.api.annotation.metadata.OutputResolver;
 import org.mule.runtime.extension.api.annotation.param.Connection;
+import org.mule.runtime.extension.api.annotation.param.NullSafe;
 import org.mule.runtime.extension.api.annotation.param.Optional;
 import org.mule.runtime.extension.api.annotation.param.UseConfig;
 import org.mule.runtime.extension.api.annotation.param.display.Summary;
 import org.mule.runtime.extension.api.runtime.operation.Result;
 
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
@@ -43,10 +45,9 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
-import javax.jms.Topic;
+import javax.jms.Session;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Operation that allows the user to send a message to a JMS {@link Destination} and waits for a response
@@ -54,19 +55,18 @@ import org.slf4j.LoggerFactory;
  *
  * @since 4.0
  */
-public class JmsRequestReply {
+public class JmsPublishConsume {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(JmsRequestReply.class);
+  private static final Logger LOGGER = getLogger(JmsPublishConsume.class);
   private JmsResultFactory resultFactory = new JmsResultFactory();
 
   /**
    * Operation that allows the user to send a message to a JMS {@link Destination} and waits for a response
    * either to the provided {@code ReplyTo} destination or to a temporary {@link Destination} created dynamically
    *
-   * @param config             the current {@link JmsProducerConfig}
+   * @param config             the current {@link JmsProducerProperties}
    * @param connection         the current {@link JmsConnection}
    * @param destination        the name of the {@link Destination} where the {@link Message} should be sent
-   * @param isTopic            {@code true} if the {@link Destination} is a {@link Topic}
    * @param messageBuilder     the {@link MessageBuilder} used to create the {@link Message} to be sent
    * @param messageBuilder     the {@link MessageBuilder} used to create the {@link Message} to be sent
    * @param persistentDelivery {@code true} if {@link DeliveryMode#PERSISTENT} should be used
@@ -81,31 +81,30 @@ public class JmsRequestReply {
    * @throws JmsExtensionException if an error occurs
    */
   @OutputResolver(output = JmsOutputResolver.class)
-  public Result<Object, JmsAttributes> requestReply(@UseConfig JmsProducerConfig config, @Connection JmsConnection connection,
-                                                    @XmlHints(
-                                                        allowReferences = false) @Summary("The name of the Destination where the Message should be sent") String destination,
-                                                    @Optional(
-                                                        defaultValue = "false") @Summary("The kind of the Destination") boolean isTopic,
-                                                    @Summary("A builder for the message that will be published") MessageBuilder messageBuilder,
-                                                    @Optional @Summary("If true, the Message will be sent using the PERSISTENT JMSDeliveryMode") Boolean persistentDelivery,
-                                                    @Optional @Summary("The default JMSPriority value to be used when sending the message") Integer priority,
-                                                    @Optional @Summary("Defines the default time the message will be in the broker before it expires and is discarded") Long timeToLive,
-                                                    @Optional @Summary("Time unit to be used in the timeToLive configurations") TimeUnit timeToLiveUnit,
-                                                    @Optional(
-                                                        defaultValue = "10000") @Summary("Maximum time to wait for a response") Long maximumWaitTime,
-                                                    @Optional String encoding,
-                                                    @Optional AckMode ackMode,
-                                                    // JMS 2.0
-                                                    @Optional @Summary("Only used by JMS 2.0. Sets the delivery delay to be applied in order to postpone the Message delivery") Long deliveryDelay,
-                                                    @Optional @Summary("Time unit to be used in the deliveryDelay configurations") TimeUnit deliveryDelayUnit)
+  public Result<Object, JmsAttributes> publishConsume(@UseConfig JmsConfig config, @Connection JmsConnection connection,
+                                                      @XmlHints(
+                                                          allowReferences = false) @Summary("The name of the Destination where the Message should be sent") String destination,
+                                                      @Optional @NullSafe @Summary("A builder for the message that will be published") MessageBuilder messageBuilder,
+                                                      @Optional @Summary("If true, the Message will be sent using the PERSISTENT JMSDeliveryMode") Boolean persistentDelivery,
+                                                      @Optional @Summary("The default JMSPriority value to be used when sending the message") Integer priority,
+                                                      @Optional @Summary("Defines the default time the message will be in the broker before it expires and is discarded") Long timeToLive,
+                                                      @Optional @Summary("Time unit to be used in the timeToLive configurations") TimeUnit timeToLiveUnit,
+                                                      @Optional(
+                                                          defaultValue = "10000") @Summary("Maximum time to wait for a response") Long maximumWaitTime,
+                                                      @Optional String encoding,
+                                                      @Optional AckMode ackMode,
+                                                      // JMS 2.0
+                                                      @Optional @Summary("Only used by JMS 2.0. Sets the delivery delay to be applied in order to postpone the Message delivery") Long deliveryDelay,
+                                                      @Optional @Summary("Time unit to be used in the deliveryDelay configurations") TimeUnit deliveryDelayUnit)
       throws JmsExtensionException {
 
+    JmsProducerProperties producerConfig = config.getProducerConfig();
     java.util.Optional<Long> delay = resolveDeliveryDelay(connection.getJmsSupport().getSpecification(),
-                                                          config, deliveryDelay, deliveryDelayUnit);
-    persistentDelivery = resolveOverride(config.isPersistentDelivery(), persistentDelivery);
-    priority = resolveOverride(config.getPriority(), priority);
-    timeToLive = resolveOverride(config.getTimeToLiveUnit(), timeToLiveUnit)
-        .toMillis(resolveOverride(config.getTimeToLive(), timeToLive));
+                                                          producerConfig, deliveryDelay, deliveryDelayUnit);
+    persistentDelivery = resolveOverride(producerConfig.isPersistentDelivery(), persistentDelivery);
+    priority = resolveOverride(producerConfig.getPriority(), priority);
+    timeToLive = resolveOverride(producerConfig.getTimeToLiveUnit(), timeToLiveUnit)
+        .toMillis(resolveOverride(producerConfig.getTimeToLive(), timeToLive));
 
     JmsSession session;
     Message message;
@@ -116,21 +115,19 @@ public class JmsRequestReply {
       }
 
       JmsSupport jmsSupport = connection.getJmsSupport();
-      session = connection.createSession(AUTO, isTopic);
+      session = connection.createSession(AUTO, false);
 
       message = messageBuilder.build(jmsSupport, session.get(), config);
-      replyConsumerType = setReplyDestination(isTopic, messageBuilder, session, jmsSupport, message);
-
-      validateReplyToSessionSupport(isTopic, replyConsumerType, jmsSupport);
+      replyConsumerType = setReplyDestination(messageBuilder, session, jmsSupport, message);
 
       if (LOGGER.isDebugEnabled()) {
         LOGGER.debug("Message built, sending message");
       }
 
-      Destination jmsDestination = jmsSupport.createDestination(session.get(), destination, isTopic);
-      MessageProducer producer = createProducer(connection, config, isTopic, session.get(),
+      Destination jmsDestination = jmsSupport.createDestination(session.get(), destination, false);
+      MessageProducer producer = createProducer(connection, producerConfig, false, session.get(),
                                                 delay, jmsDestination, LOGGER);
-      jmsSupport.send(producer, message, jmsDestination, persistentDelivery, priority, timeToLive, isTopic);
+      jmsSupport.send(producer, message, jmsDestination, persistentDelivery, priority, timeToLive, false);
 
       if (LOGGER.isDebugEnabled()) {
         LOGGER.debug("Message Sent, prepare for response");
@@ -149,7 +146,9 @@ public class JmsRequestReply {
 
       Message received = resolveConsumeMessage(maximumWaitTime, consumer).get();
 
-      evaluateMessageAck(connection, (ackMode != null) ? ackMode : NONE, session, received, LOGGER);
+      if (received != null) {
+        evaluateMessageAck(connection, (ackMode != null) ? ackMode : NONE, session, received, LOGGER);
+      }
 
       if (LOGGER.isDebugEnabled()) {
         LOGGER.debug("Creating response result");
@@ -165,31 +164,67 @@ public class JmsRequestReply {
     }
   }
 
-  private void validateReplyToSessionSupport(boolean requestDestinationIsTopic, ConsumerType replyConsumerType,
-                                             JmsSupport jmsSupport)
-      throws JmsExtensionException {
-    if (jmsSupport.getSpecification().equals(JMS_1_0_2b) &&
-        (requestDestinationIsTopic != replyConsumerType.isTopic())) {
-      throw new JmsExtensionException(createStaticMessage("Replying to a different kind of Destination than the one used for request is not supported in JMS 1.0.2b specification."));
-    }
-  }
-
-  private ConsumerType setReplyDestination(boolean isTopic, MessageBuilder messageBuilder,
+  private ConsumerType setReplyDestination(MessageBuilder messageBuilder,
                                            JmsSession session, JmsSupport jmsSupport, Message message)
       throws JMSException {
 
-    boolean topicConsumer;
     if (message.getJMSReplyTo() != null) {
-      topicConsumer = messageBuilder.getReplyTo().isTopic();
+      return messageBuilder.getReplyTo().getDestinationType().isTopic() ? new TopicConsumer() : new QueueConsumer();
     } else {
       if (LOGGER.isDebugEnabled()) {
         LOGGER.debug("Using temporary destination");
       }
-      // Resolve using a temporary destination and the current destination type
-      message.setJMSReplyTo(jmsSupport.createTemporaryDestination(session.get(), isTopic));
-      topicConsumer = isTopic;
+      message.setJMSReplyTo(jmsSupport.createTemporaryDestination(session.get()));
+      return new QueueConsumer();
     }
-    return topicConsumer ? new TopicConsumer() : new QueueConsumer();
   }
 
+  private MessageProducer createProducer(JmsConnection connection, JmsProducerProperties config, boolean isTopic,
+                                         Session session, java.util.Optional<Long> deliveryDelay,
+                                         Destination jmsDestination, Logger logger)
+      throws JMSException {
+
+    MessageProducer producer = connection.createProducer(session, jmsDestination, isTopic);
+    setDisableMessageID(producer, config.isDisableMessageId(), logger);
+    setDisableMessageTimestamp(producer, config.isDisableMessageTimestamp(), logger);
+    if (deliveryDelay.isPresent()) {
+      setDeliveryDelay(producer, deliveryDelay.get(), logger);
+    }
+
+    return producer;
+  }
+
+  private void setDeliveryDelay(MessageProducer producer, Long value, Logger logger) {
+    try {
+      producer.setDeliveryDelay(value);
+    } catch (JMSException e) {
+      logger.error("Failed to configure [setDeliveryDelay] in MessageProducer: ", e);
+    }
+  }
+
+  private void setDisableMessageID(MessageProducer producer, boolean value, Logger logger) {
+    try {
+      producer.setDisableMessageID(value);
+    } catch (JMSException e) {
+      logger.error("Failed to configure [setDisableMessageID] in MessageProducer: ", e);
+    }
+  }
+
+  private void setDisableMessageTimestamp(MessageProducer producer, boolean value, Logger logger) {
+    try {
+      producer.setDisableMessageTimestamp(value);
+    } catch (JMSException e) {
+      logger.error("Failed to configure [setDisableMessageTimestamp] in MessageProducer: ", e);
+    }
+  }
+
+  private Supplier<Message> resolveConsumeMessage(Long maximumWaitTime, MessageConsumer consumer) {
+    if (maximumWaitTime == -1) {
+      return wrappedSupplier(consumer::receive);
+    } else if (maximumWaitTime == 0) {
+      return wrappedSupplier(consumer::receiveNoWait);
+    } else {
+      return wrappedSupplier(() -> consumer.receive(maximumWaitTime));
+    }
+  }
 }

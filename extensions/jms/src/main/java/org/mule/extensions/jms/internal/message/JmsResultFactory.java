@@ -9,6 +9,8 @@ package org.mule.extensions.jms.internal.message;
 
 import static java.lang.String.format;
 import static java.nio.charset.Charset.forName;
+import static org.mule.extensions.jms.api.destination.DestinationType.QUEUE;
+import static org.mule.extensions.jms.api.destination.DestinationType.TOPIC;
 import static org.mule.extensions.jms.internal.message.JmsMessageUtils.getPropertiesMap;
 import static org.mule.extensions.jms.internal.message.JmsMessageUtils.toObject;
 import org.mule.extensions.jms.api.connection.JmsSpecification;
@@ -220,8 +222,8 @@ public class JmsResultFactory {
 
   private JmsDestination getDestination(Destination value) throws JMSException {
     return value instanceof Queue
-        ? new JmsDestination(((Queue) value).getQueueName(), false)
-        : new JmsDestination(((Topic) value).getTopicName(), true);
+        ? new JmsDestination(((Queue) value).getQueueName(), QUEUE)
+        : new JmsDestination(((Topic) value).getTopicName(), TOPIC);
   }
 
   private void addDeliveryModeProperty(Message jmsMessage, DefaultJmsHeaders.Builder jmsHeadersBuilder) {

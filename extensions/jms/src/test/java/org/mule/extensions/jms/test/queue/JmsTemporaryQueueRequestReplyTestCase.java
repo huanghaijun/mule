@@ -20,8 +20,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 import org.junit.Test;
+import ru.yandex.qatools.allure.annotations.Description;
+import ru.yandex.qatools.allure.annotations.Features;
+import ru.yandex.qatools.allure.annotations.Stories;
 
-
+@Features("JMS Extension")
+@Stories("Queue Request Reply")
 public class JmsTemporaryQueueRequestReplyTestCase extends JmsAbstractTestCase {
 
   private static final String FIRST_MESSAGE = "My First Message";
@@ -44,8 +48,8 @@ public class JmsTemporaryQueueRequestReplyTestCase extends JmsAbstractTestCase {
   }
 
   @Test
-  public void requestReplyExplicitReplyDestination() throws Exception {
-
+  @Description("Checks that a message can be sent and then wait for the reply to dynamic temporary destination")
+  public void requestReplyTemporaryReplyDestination() throws Exception {
     ExecutorService executor = newFixedThreadPool(2);
 
     Future<InternalMessage> requesterTarget = executor

@@ -6,25 +6,34 @@
  */
 package org.mule.extensions.jms.api.destination;
 
-import org.mule.runtime.extension.api.annotation.Alias;
-
 import javax.jms.Destination;
 import javax.jms.Queue;
+import javax.jms.Topic;
 
 /**
- * Implementation of {@link ConsumerType} that marks the consumed {@link Destination}
- * as a {@link Queue}.
+ * Type identifier for a {@link Destination}.
  *
  * @since 4.0
  */
-@Alias("queue-consumer")
-public final class QueueConsumer implements ConsumerType {
+public enum DestinationType {
 
   /**
-   * {@inheritDoc}
+   * {@link Destination} is a {@link Queue}
    */
-  @Override
+  QUEUE(false),
+
+  /**
+   * {@link Destination} is a {@link Topic}
+   */
+  TOPIC(true);
+
+  private final boolean isTopic;
+
+  DestinationType(boolean isTopic) {
+    this.isTopic = isTopic;
+  }
+
   public boolean isTopic() {
-    return false;
+    return isTopic;
   }
 }

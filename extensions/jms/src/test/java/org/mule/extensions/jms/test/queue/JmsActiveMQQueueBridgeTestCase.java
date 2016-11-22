@@ -12,9 +12,13 @@ import org.mule.test.runner.RunnerDelegateTo;
 import java.util.Collection;
 
 import org.junit.runners.Parameterized;
+import ru.yandex.qatools.allure.annotations.Features;
+import ru.yandex.qatools.allure.annotations.Stories;
 
 
 @RunnerDelegateTo(Parameterized.class)
+@Features("JMS Extension")
+@Stories("ActiveMQ Connection Provider Queue Bridge")
 public class JmsActiveMQQueueBridgeTestCase extends JmsAbstractQueueBridge {
 
   @Parameterized.Parameter(0)

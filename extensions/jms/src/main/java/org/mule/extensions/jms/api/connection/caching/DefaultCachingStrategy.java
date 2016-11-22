@@ -27,7 +27,7 @@ import org.springframework.jms.connection.CachingConnectionFactory;
  * @since 4.0
  */
 @Alias("default-caching")
-public class DefaultCachingStrategy implements CachingStrategy, CachingConfiguration {
+public final class DefaultCachingStrategy implements CachingStrategy, CachingConfiguration {
 
   /**
    * Amount of {@link Session}s to cache

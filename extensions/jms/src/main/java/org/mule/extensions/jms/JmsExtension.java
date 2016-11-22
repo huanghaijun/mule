@@ -8,8 +8,7 @@ package org.mule.extensions.jms;
  */
 
 
-import org.mule.extensions.jms.api.config.JmsConsumerConfig;
-import org.mule.extensions.jms.api.config.JmsProducerConfig;
+import org.mule.extensions.jms.api.config.JmsConfig;
 import org.mule.extensions.jms.api.connection.caching.CachingStrategy;
 import org.mule.extensions.jms.api.connection.caching.DefaultCachingStrategy;
 import org.mule.extensions.jms.api.connection.caching.NoCachingConfiguration;
@@ -42,7 +41,7 @@ import javax.jms.ConnectionFactory;
  */
 @Extension(name = "JMS Extension")
 @Xml(namespace = "jmsn")
-@Configurations({JmsConsumerConfig.class, JmsProducerConfig.class})
+@Configurations({JmsConfig.class})
 @ConnectionProviders({GenericConnectionProvider.class, ActiveMQConnectionProvider.class})
 @SubTypeMapping(
     baseType = ConsumerType.class, subTypes = {QueueConsumer.class, TopicConsumer.class})

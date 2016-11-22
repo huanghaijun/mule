@@ -59,7 +59,6 @@ public abstract class JmsAbstractTopicBridge extends JmsAbstractTestCase {
   public void bridge() throws Exception {
 
     //Subscribe to source topic
-
     initBridgeListener();
 
     // Listen for bridged message

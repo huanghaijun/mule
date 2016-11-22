@@ -205,16 +205,10 @@ public class Jms102bSupport extends Jms11Support {
    * {@inheritDoc}
    */
   @Override
-  public Destination createTemporaryDestination(Session session, boolean isTopic) throws JMSException {
+  public Destination createTemporaryDestination(Session session) throws JMSException {
     checkArgument(session != null, "Session cannot be null when creating a destination");
-
-    if (isTopic) {
-      // DO NOT REMOVE THE CAST, BREAKS WEBLOGIC 8.X
-      return ((TopicSession) session).createTemporaryTopic();
-    } else {
-      // DO NOT REMOVE THE CAST, BREAKS WEBLOGIC 8.X
-      return ((QueueSession) session).createTemporaryQueue();
-    }
+    // DO NOT REMOVE THE CAST, BREAKS WEBLOGIC 8.X
+    return ((QueueSession) session).createTemporaryQueue();
   }
 
   /**

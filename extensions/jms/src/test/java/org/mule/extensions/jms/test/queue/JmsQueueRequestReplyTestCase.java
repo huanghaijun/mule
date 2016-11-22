@@ -15,8 +15,12 @@ import org.mule.extensions.jms.test.JmsAbstractTestCase;
 import org.mule.runtime.core.api.message.InternalMessage;
 
 import org.junit.Test;
+import ru.yandex.qatools.allure.annotations.Description;
+import ru.yandex.qatools.allure.annotations.Features;
+import ru.yandex.qatools.allure.annotations.Stories;
 
-
+@Features("JMS Extension")
+@Stories("Queue Request Reply")
 public class JmsQueueRequestReplyTestCase extends JmsAbstractTestCase {
 
   private static final String FIRST_MESSAGE = "My First Message";
@@ -39,8 +43,8 @@ public class JmsQueueRequestReplyTestCase extends JmsAbstractTestCase {
   }
 
   @Test
+  @Description("Checks that a message can be sent and then wait for the reply to an explicit replyTo destination")
   public void requestReplyExplicitReplyDestination() throws Exception {
-
     // Post a message to be read when listening for a reply in the "replyTo" queue
     flowRunner(PUBLISHER_FLOW)
         .withVariable(REPLY_TO_DESTINATION_VAR, REPLY_TO_DESTINATION)

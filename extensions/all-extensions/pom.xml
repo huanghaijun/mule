@@ -262,6 +262,42 @@
 
         <dependency>
             <groupId>org.mule.modules</groupId>
+            <artifactId>mule-module-jms</artifactId>
+            <version>${project.version}</version>
+            <type>zip</type>
+            <!--TODO(gfernandes): remove this, see validation's comment-->
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.cxf</groupId>
+                    <artifactId>cxf-rt-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.cxf</groupId>
+                    <artifactId>cxf-rt-frontend-simple</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.mule</groupId>
+                    <artifactId>mule-metadata-model-xml</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>commons-lang</groupId>
+                    <artifactId>commons-lang</artifactId>
+                </exclusion>
+                <!--TODO remove MULE-10783-->
+                <exclusion>
+                    <groupId>com.squareup.okhttp</groupId>
+                    <artifactId>okhttp</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.mule.modules</groupId>
             <artifactId>mule-module-validation</artifactId>
             <version>${project.version}</version>
             <type>zip</type>

@@ -29,7 +29,11 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
+import javax.jms.QueueSender;
 import javax.jms.Session;
+import javax.jms.Topic;
+import javax.jms.TopicPublisher;
+import javax.jms.TopicSession;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +43,7 @@ import org.slf4j.LoggerFactory;
  *
  * @since 4.0
  */
-public class JmsConnection implements Stoppable, Disposable {
+public final class JmsConnection implements Stoppable, Disposable {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(JmsConnection.class);
 
@@ -63,6 +67,15 @@ public class JmsConnection implements Stoppable, Disposable {
     return connection;
   }
 
+  /**
+   * Creates a new JMS {@link Session} using the current {@link Connection}
+   *
+   * @param ackMode the {@link Session} {@link AckMode}
+   * @param isTopic if {@code true} the {@link Session} created will be a {@link TopicSession}.
+   *                This distinction is made only for {@link JmsSpecification#JMS_1_0_2b}
+   * @return a new {@link Session}
+   * @throws JMSException if an error occurs while creating the {@link Session}
+   */
   public JmsSession createSession(AckMode ackMode, boolean isTopic) throws JMSException {
     Session session = jmsSupport.createSession(connection, isTopic, ackMode.equals(TRANSACTED), ackMode.getAckMode());
     createdSessions.add(session);
@@ -76,6 +89,16 @@ public class JmsConnection implements Stoppable, Disposable {
     return new JmsSession(session, "");
   }
 
+  /**
+   * Creates a new JMS {@link MessageConsumer} using the given {@link Session}
+   *
+   * @param session the {@link Session} used to create the {@link MessageConsumer}
+   * @param jmsDestination the {@link Destination} from which {@link Message}s will be consumed
+   * @param selector a JMS selector string for filtering incoming {@link Message}s. Empty or {@code null} implies no filtering
+   * @param consumerType the {@link ConsumerType} to use based on the {@link Destination} type
+   * @return a new {@link MessageConsumer} for the given {@link Destination}
+   * @throws JMSException if an error occurs while creating the consumer
+   */
   public MessageConsumer createConsumer(Session session, Destination jmsDestination, String selector, ConsumerType consumerType)
       throws JMSException {
     MessageConsumer consumer = jmsSupport.createConsumer(session, jmsDestination, selector, consumerType);
@@ -83,12 +106,30 @@ public class JmsConnection implements Stoppable, Disposable {
     return consumer;
   }
 
+  /**
+   * Creates a new JMS {@link MessageProducer} using the given {@link Session}
+   *
+   * @param session the {@link Session} used to create the {@link MessageProducer}
+   * @param jmsDestination the {@link Destination} to where the {@link Message}s will be published
+   * @param isTopic if {@code true} the given {@link Destination} has a {@link Topic} destination type.
+   *                This distinction is made only for {@link JmsSpecification#JMS_1_0_2b} in order to decide whether
+   *                to create a {@link TopicPublisher} or a {@link QueueSender}
+   * @return a new {@link MessageProducer} for the given {@link Destination}
+   * @throws JMSException if an error occurs while creating the consumer
+   */
   public MessageProducer createProducer(Session session, Destination jmsDestination, boolean isTopic) throws JMSException {
     MessageProducer producer = jmsSupport.createProducer(session, jmsDestination, isTopic);
     createdProducers.add(producer);
     return producer;
   }
 
+  /**
+   * Registers the {@link Message} to the {@link Session} using the {@code ackId} in order to being
+   * able later to perform a {@link AckMode#MANUAL} ACK
+   *
+   * @param ackId the id associated to the {@link Session} used to create the {@link Message}
+   * @param message the {@link Message} to use for executing the {@link Message#acknowledge}
+   */
   public void registerMessageForAck(String ackId, Message message) {
     if (!isBlank(ackId) && pendingAckSessions.get(ackId) == null) {
       pendingAckSessions.put(ackId, message);
@@ -99,6 +140,13 @@ public class JmsConnection implements Stoppable, Disposable {
     }
   }
 
+  /**
+   * Executes the {@link Message#acknowledge} on the latest {@link Message} associated to the {@link Session}
+   * identified by the {@code ackId}
+   *
+   * @param ackId the id associated to the {@link Session} that should be ACKed
+   * @throws JMSException if an error occurs during the ack
+   */
   public void doAck(String ackId) throws JMSException {
 
     Message message = pendingAckSessions.get(ackId);

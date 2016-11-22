@@ -15,7 +15,7 @@ import javax.jms.Destination;
  *
  * @since 4.0
  */
-public class DestinationNotFoundException extends JmsExtensionException {
+public final class DestinationNotFoundException extends JmsExtensionException {
 
   public DestinationNotFoundException(I18nMessage message) {
     super(message);

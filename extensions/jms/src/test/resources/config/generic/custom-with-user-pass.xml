@@ -6,12 +6,8 @@
       http://www.mulesoft.org/schema/mule/jmsn http://www.mulesoft.org/schema/mule/jmsn/current/mule-jmsn.xsd">
 
 
-    <jmsn:consumer-config name="consumer">
+    <jmsn:config name="config">
         <jmsn:active-mq-connection username="user" password="pass"/>
-    </jmsn:consumer-config>
-
-    <jmsn:producer-config name="producer">
-        <jmsn:active-mq-connection username="user" password="pass"/>
-    </jmsn:producer-config>
+    </jmsn:config>
 
 </mule>

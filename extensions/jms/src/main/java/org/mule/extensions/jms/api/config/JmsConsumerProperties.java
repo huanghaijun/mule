@@ -9,24 +9,22 @@ package org.mule.extensions.jms.api.config;
 import static org.mule.runtime.api.meta.ExpressionSupport.NOT_SUPPORTED;
 import org.mule.extensions.jms.api.destination.ConsumerType;
 import org.mule.extensions.jms.api.destination.QueueConsumer;
-import org.mule.extensions.jms.api.operation.JmsConsume;
-import org.mule.runtime.extension.api.annotation.Configuration;
 import org.mule.runtime.extension.api.annotation.Expression;
-import org.mule.runtime.extension.api.annotation.Operations;
+import org.mule.runtime.extension.api.annotation.dsl.xml.XmlHints;
 import org.mule.runtime.extension.api.annotation.param.NullSafe;
 import org.mule.runtime.extension.api.annotation.param.Optional;
 import org.mule.runtime.extension.api.annotation.param.Parameter;
+import org.mule.runtime.extension.api.annotation.param.display.Summary;
 
 import javax.jms.Message;
 
 /**
- * Configuration for consuming messages from a JMS Queue or Topics
+ * Configuration parameters for consuming messages from a JMS Queue or Topics
  *
  * @since 4.0
  */
-@Configuration(name = "consumer-config")
-@Operations({JmsConsume.class})
-public class JmsConsumerConfig extends JmsBaseConfig {
+@XmlHints(allowTopLevelDefinition = true)
+public class JmsConsumerProperties {
 
   /**
    * The {@link AckMode} to use when consuming a {@link Message}
@@ -36,6 +34,7 @@ public class JmsConsumerConfig extends JmsBaseConfig {
   @Parameter
   @Optional(defaultValue = "AUTO")
   @Expression(NOT_SUPPORTED)
+  @Summary("The Session ACK mode to use when consuming a message")
   private AckMode ackMode;
 
   /**
@@ -46,7 +45,8 @@ public class JmsConsumerConfig extends JmsBaseConfig {
   @Optional
   @Expression(NOT_SUPPORTED)
   @NullSafe(defaultImplementingType = QueueConsumer.class)
-  private ConsumerType consumerType;
+  // TODO MULE-10901: Nullsafe bug
+  private ConsumerType consumerType = new QueueConsumer();
 
   /**
    * Default selector to be used for filtering when consuming a {@link Message}
@@ -55,6 +55,7 @@ public class JmsConsumerConfig extends JmsBaseConfig {
   @Parameter
   @Optional
   @Expression(NOT_SUPPORTED)
+  @Summary("Default JMS selector to be used for filtering incoming messages")
   private String selector;
 
   /**

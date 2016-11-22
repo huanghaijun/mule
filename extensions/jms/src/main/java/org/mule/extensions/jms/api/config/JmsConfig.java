@@ -7,9 +7,17 @@
 package org.mule.extensions.jms.api.config;
 
 import org.mule.extensions.jms.JmsExtension;
+import org.mule.extensions.jms.api.operation.JmsAck;
+import org.mule.extensions.jms.api.operation.JmsConsume;
+import org.mule.extensions.jms.api.operation.JmsPublish;
+import org.mule.extensions.jms.api.operation.JmsPublishConsume;
 import org.mule.runtime.api.lifecycle.Initialisable;
 import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.core.api.MuleContext;
+import org.mule.runtime.extension.api.annotation.Alias;
+import org.mule.runtime.extension.api.annotation.Configuration;
+import org.mule.runtime.extension.api.annotation.Operations;
+import org.mule.runtime.extension.api.annotation.param.NullSafe;
 import org.mule.runtime.extension.api.annotation.param.Optional;
 import org.mule.runtime.extension.api.annotation.param.Parameter;
 
@@ -20,7 +28,9 @@ import javax.inject.Inject;
  *
  * @since 4.0
  */
-public abstract class JmsBaseConfig implements Initialisable {
+@Configuration(name = "config")
+@Operations({JmsConsume.class, JmsPublish.class, JmsPublishConsume.class, JmsAck.class})
+public class JmsConfig implements Initialisable {
 
   @Inject
   private MuleContext muleContext;
@@ -47,6 +57,24 @@ public abstract class JmsBaseConfig implements Initialisable {
   @Optional(defaultValue = "text/plain")
   private String contentType;
 
+  /**
+   * Configuration parameters for consuming messages from a JMS Queue or Topics
+   */
+  @Parameter
+  @Optional
+  @NullSafe
+  @Alias("consumer-properties")
+  private JmsConsumerProperties consumerConfig;
+
+  /**
+   * Configuration parameters for sending messages to a JMS Queue or Topic
+   */
+  @Parameter
+  @Optional
+  @NullSafe
+  @Alias("producer-properties")
+  private JmsProducerProperties producerConfig;
+
 
   public String getContentType() {
     return contentType;
@@ -56,4 +84,11 @@ public abstract class JmsBaseConfig implements Initialisable {
     return encoding;
   }
 
+  public JmsConsumerProperties getConsumerConfig() {
+    return consumerConfig;
+  }
+
+  public JmsProducerProperties getProducerConfig() {
+    return producerConfig;
+  }
 }

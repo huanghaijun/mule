@@ -6,23 +6,19 @@
  */
 package org.mule.extensions.jms.api.operation;
 
-import static org.mule.extensions.jms.internal.function.JmsSupplier.wrappedSupplier;
+import static java.lang.String.format;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
+import static org.slf4j.LoggerFactory.getLogger;
 import org.mule.extensions.jms.api.config.AckMode;
 import org.mule.extensions.jms.api.connection.JmsConnection;
 import org.mule.extensions.jms.api.connection.JmsSession;
-import org.mule.extensions.jms.api.destination.ConsumerType;
-import org.mule.extensions.jms.api.destination.QueueConsumer;
 import org.mule.extensions.jms.api.exception.JmsExtensionException;
 import org.mule.runtime.extension.api.annotation.param.Connection;
-
-import java.util.function.Supplier;
+import org.mule.runtime.extension.api.annotation.param.display.Summary;
 
 import javax.jms.Message;
-import javax.jms.MessageConsumer;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 /**
@@ -30,9 +26,9 @@ import org.slf4j.LoggerFactory;
  *
  * @since 4.0
  */
-public class JmsAck {
+public final class JmsAck {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(JmsAck.class);
+  private static final Logger LOGGER = getLogger(JmsAck.class);
 
   /**
    * Allows the user to perform an ACK when the {@link AckMode#MANUAL} mode is elected while consuming the {@link Message}.
@@ -48,11 +44,10 @@ public class JmsAck {
    * @throws JmsExtensionException if the {@link JmsSession} or {@link JmsConnection} were closed, or if the ID doesn't belong
    * to a session of the current connection
    */
-  public void ack(@Connection JmsConnection connection, String ackId)
+  public void ack(@Connection JmsConnection connection, @Summary("The AckId of the Message to ACK") String ackId)
       throws JmsExtensionException {
 
     try {
-
       if (LOGGER.isDebugEnabled()) {
         LOGGER.debug("Performing ACK on session: " + ackId);
       }
@@ -60,24 +55,11 @@ public class JmsAck {
       connection.doAck(ackId);
 
     } catch (Exception e) {
-      LOGGER.error("An error occurred while acking a message: ", e);
-
-      throw new JmsExtensionException(createStaticMessage("An error occurred while trying to perform an ACK: "), e);
+      LOGGER.error(format("An error occurred while acking a message with ID [%s]: ", ackId), e);
+      throw new JmsExtensionException(createStaticMessage("An error occurred while trying to perform an ACK on Session with ID [%s]: ",
+                                                          ackId),
+                                      e);
     }
-  }
-
-  private Supplier<Message> resolveConsumeMessage(Long maximumWaitTime, MessageConsumer consumer) {
-    if (maximumWaitTime == -1) {
-      return wrappedSupplier(consumer::receive);
-    } else if (maximumWaitTime == 0) {
-      return wrappedSupplier(consumer::receiveNoWait);
-    } else {
-      return wrappedSupplier(() -> consumer.receive(maximumWaitTime));
-    }
-  }
-
-  private ConsumerType resolveConsumerType(ConsumerType consumerType) {
-    return consumerType != null ? consumerType : new QueueConsumer();
   }
 
 }

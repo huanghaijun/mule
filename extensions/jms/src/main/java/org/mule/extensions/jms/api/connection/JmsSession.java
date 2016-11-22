@@ -14,7 +14,7 @@ import javax.jms.Session;
  *
  * @since 4.0
  */
-public class JmsSession {
+public final class JmsSession {
 
   private final Session session;
   private final String ackId;

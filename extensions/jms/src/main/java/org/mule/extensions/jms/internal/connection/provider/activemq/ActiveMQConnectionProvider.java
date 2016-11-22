@@ -132,5 +132,4 @@ public class ActiveMQConnectionProvider extends BaseConnectionProvider {
   public ActiveMQConnectionFactoryProvider getConnectionFactoryProvider() {
     return connectionFactoryProvider;
   }
-
 }

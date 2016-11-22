@@ -6,9 +6,6 @@
  */
 package org.mule.extensions.jms.api.destination;
 
-import static org.mule.runtime.api.meta.ExpressionSupport.NOT_SUPPORTED;
-import org.mule.runtime.extension.api.annotation.Alias;
-import org.mule.runtime.extension.api.annotation.Expression;
 import org.mule.runtime.extension.api.annotation.dsl.xml.XmlHints;
 import org.mule.runtime.extension.api.annotation.param.Optional;
 import org.mule.runtime.extension.api.annotation.param.Parameter;
@@ -16,8 +13,6 @@ import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
 import org.mule.runtime.extension.api.annotation.param.display.Summary;
 
 import javax.jms.Destination;
-import javax.jms.Queue;
-import javax.jms.Topic;
 
 /**
  * Representation of a {@link Destination} that contains it's identifier name
@@ -25,7 +20,7 @@ import javax.jms.Topic;
  *
  * @since 4.0
  */
-public class JmsDestination {
+public final class JmsDestination {
 
   /**
    * The name that identifies the destination where a reply to a message should be sent
@@ -37,28 +32,25 @@ public class JmsDestination {
   private String destination;
 
   /**
-   * If {@code true}, declares that {@code this} destination is a {@link Topic}, otherwise
-   * the default destination type is set to {@link Queue}
+   * the type of this destination
    */
   @Parameter
-  @Optional(defaultValue = "false")
-  @Expression(NOT_SUPPORTED)
-  @Alias("isTopic")
-  private boolean topic;
+  @Optional(defaultValue = "QUEUE")
+  private DestinationType destinationType;
 
 
   public JmsDestination() {}
 
-  public JmsDestination(String name, boolean isTopic) {
+  public JmsDestination(String name, DestinationType type) {
     this.destination = name;
-    this.topic = isTopic;
+    this.destinationType = type;
   }
 
   public String getDestination() {
     return destination;
   }
 
-  public boolean isTopic() {
-    return topic;
+  public DestinationType getDestinationType() {
+    return destinationType;
   }
 }

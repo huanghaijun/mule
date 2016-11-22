@@ -22,7 +22,7 @@
         <!--<AsyncLogger name="org.mule.test.runner" level="DEBUG"/>-->
         <AsyncLogger name="com.mulesoft" level="WARN"/>
 
-        <!--<AsyncLogger name="org.mule.extensions" level="DEBUG"/>-->
+        <AsyncLogger name="org.mule.extensions" level="DEBUG"/>
 
         <AsyncRoot level="INFO">
             <AppenderRef ref="Console"/>

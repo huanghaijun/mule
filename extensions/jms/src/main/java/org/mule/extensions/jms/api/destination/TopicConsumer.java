@@ -27,7 +27,7 @@ import javax.jms.Topic;
  * @since 4.0
  */
 @Alias("topic-consumer")
-public class TopicConsumer implements ConsumerType, Initialisable {
+public final class TopicConsumer implements ConsumerType, Initialisable {
 
   /**
    * Allows an application to receive all the messages published on a topic,
