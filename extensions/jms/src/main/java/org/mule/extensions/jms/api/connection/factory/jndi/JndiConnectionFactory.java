@@ -98,7 +98,9 @@ public final class JndiConnectionFactory extends DelegatingConnectionFactory imp
         throw new IllegalArgumentException("No valid ConnectionFactory was provided. Unable to initialise.");
       }
     } catch (NamingException e) {
-      e.printStackTrace();
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("Failed to initialise the Connection factory: ", e);
+      }
       throw new InitialisationException(e, this);
     }
   }
