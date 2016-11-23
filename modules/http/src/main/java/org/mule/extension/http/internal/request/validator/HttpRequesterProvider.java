@@ -104,7 +104,7 @@ public class HttpRequesterProvider implements CachedConnectionProvider<HttpClien
   @Parameter
   @Optional
   @DisplayName(TLS_CONFIGURATION)
-  @Placement(tab = TLS, group = TLS_CONFIGURATION)
+  @Placement(tab = TLS)
   private TlsContextFactory tlsContextFactory;
 
   /**
