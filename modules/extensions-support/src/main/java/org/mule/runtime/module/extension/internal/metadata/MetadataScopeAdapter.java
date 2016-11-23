@@ -65,7 +65,7 @@ public final class MetadataScopeAdapter {
         .filter(p -> getAnnotatedElement(p).map(e -> e.isAnnotationPresent(TypeResolver.class)).orElse(false))
         .collect(toMap(NamedDeclaration::getName,
                        p -> ResolverSupplier.of(getAnnotatedElement(p).get().getAnnotation(TypeResolver.class)
-                                                    .value())));
+                           .value())));
 
     if (outputResolverDeclaration != null || !inputResolvers.isEmpty()) {
       if (outputResolverDeclaration != null) {
@@ -100,7 +100,7 @@ public final class MetadataScopeAdapter {
   }
 
   private Optional<Pair<MetadataKeyId, MetadataType>> locateMetadataKeyId(
-      ComponentDeclaration<? extends ComponentDeclaration> component) {
+                                                                          ComponentDeclaration<? extends ComponentDeclaration> component) {
 
     Optional<Pair<MetadataKeyId, MetadataType>> keyId = component.getAllParameters().stream()
         .map((declaration) -> new ImmutablePair<>(declaration, getAnnotatedElement(declaration)))
@@ -164,7 +164,7 @@ public final class MetadataScopeAdapter {
     }
 
     throw new IllegalModelDefinitionException("Unable to create Keys Resolver. A Keys Resolver is being defined " +
-                                                  "without defining an Output Resolver, Input Resolver nor Attributes Resolver");
+        "without defining an Output Resolver, Input Resolver nor Attributes Resolver");
   }
 
   public boolean isCustomScope() {

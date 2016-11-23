@@ -55,7 +55,8 @@ public abstract class AbstractAnnotationsBasedDescriberTestCase extends Abstract
                                        object -> ((OperationDeclaration) object).getName().equals(operationName));
   }
 
-  protected Pair<ParameterGroupDeclaration, ParameterDeclaration> findParameterInGroup(ParameterizedDeclaration<?> declaration, String name) {
+  protected Pair<ParameterGroupDeclaration, ParameterDeclaration> findParameterInGroup(ParameterizedDeclaration<?> declaration,
+                                                                                       String name) {
     return declaration.getParameterGroups().stream()
         .map(group -> {
           ParameterDeclaration parameter = findParameter(group.getParameters(), name);

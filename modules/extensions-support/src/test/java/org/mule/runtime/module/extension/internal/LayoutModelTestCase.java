@@ -73,7 +73,8 @@ public class LayoutModelTestCase extends AbstractAnnotationsBasedDescriberTestCa
     assertParameterPlacement(findParameterInGroup(operation, "goodbyeMessage"), KILL_WITH_GROUP, 2);
   }
 
-  private void assertParameterPlacement(Pair<ParameterGroupDeclaration, ParameterDeclaration> pair, String groupName, Integer order) {
+  private void assertParameterPlacement(Pair<ParameterGroupDeclaration, ParameterDeclaration> pair, String groupName,
+                                        Integer order) {
     ParameterGroupDeclaration group = pair.getKey();
     assertThat(group.getName(), equalTo(groupName));
 

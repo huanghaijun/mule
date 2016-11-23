@@ -186,8 +186,8 @@ public abstract class AbstractExtensionObjectFactory<T> extends AbstractAnnotate
       Collection<String> definedExclusiveParameters = intersection(exclusiveModel.getExclusiveParameterNames(), resolverKeys);
       if (definedExclusiveParameters.isEmpty() && exclusiveModel.isOneRequired()) {
         throw new ConfigurationException((createStaticMessage(
-            format("Parameter group '%s' requires that one of its optional parameters should be set but all of them are missing",
-                   group.getName()))));
+                                                              format("Parameter group '%s' requires that one of its optional parameters should be set but all of them are missing",
+                                                                     group.getName()))));
       } else if (definedExclusiveParameters.size() > 1) {
         throw buildExclusiveParametersException(model, definedExclusiveParameters);
       }
@@ -197,8 +197,8 @@ public abstract class AbstractExtensionObjectFactory<T> extends AbstractAnnotate
   private ConfigurationException buildExclusiveParametersException(ParameterizedModel model,
                                                                    Collection<String> definedExclusiveParameters) {
     return new ConfigurationException(
-        createStaticMessage(format("In %s '%s', the following parameters cannot be set at the same time: [%s]",
-                                   getComponentModelTypeName(model), getModelName(model),
-                                   Joiner.on(", ").join(definedExclusiveParameters))));
+                                      createStaticMessage(format("In %s '%s', the following parameters cannot be set at the same time: [%s]",
+                                                                 getComponentModelTypeName(model), getModelName(model),
+                                                                 Joiner.on(", ").join(definedExclusiveParameters))));
   }
 }

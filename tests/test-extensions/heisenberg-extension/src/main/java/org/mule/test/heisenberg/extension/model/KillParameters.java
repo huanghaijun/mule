@@ -14,8 +14,7 @@ import org.mule.runtime.extension.api.annotation.param.display.Placement;
 public class KillParameters {
 
 
-  public KillParameters() {
-  }
+  public KillParameters() {}
 
   public KillParameters(String victim, String goodbyeMessage) {
     this.victim = victim;

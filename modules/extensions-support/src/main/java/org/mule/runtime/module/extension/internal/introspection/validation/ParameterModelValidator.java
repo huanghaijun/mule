@@ -89,8 +89,8 @@ public final class ParameterModelValidator implements ModelValidator {
             String fieldName = field.getKey().getName().getLocalPart();
             if (RESERVED_NAMES.contains(fieldName)) {
               throw new IllegalParameterModelDefinitionException(
-                  format("The field named '%s' [%s] from class [%s] cannot have that name since it is a reserved one",
-                         fieldName, getId(field.getValue()), getId(objectType)));
+                                                                 format("The field named '%s' [%s] from class [%s] cannot have that name since it is a reserved one",
+                                                                        fieldName, getId(field.getValue()), getId(objectType)));
             }
 
             if (supportsGlobalReferences(field)) {
@@ -120,23 +120,23 @@ public final class ParameterModelValidator implements ModelValidator {
                                  String ownerModelType, String extensionName) {
     if (RESERVED_NAMES.contains(parameterModel.getName())) {
       throw new IllegalParameterModelDefinitionException(
-          format("The parameter in the %s [%s] from the extension [%s] cannot have the name ['%s'] since it is a reserved one",
-                 ownerModelType, ownerName, extensionName,
-                 parameterModel.getName()));
+                                                         format("The parameter in the %s [%s] from the extension [%s] cannot have the name ['%s'] since it is a reserved one",
+                                                                ownerModelType, ownerName, extensionName,
+                                                                parameterModel.getName()));
     }
 
     if (parameterModel.getType() == null) {
       throw new IllegalParameterModelDefinitionException(
-          format("The parameter [%s] in the %s [%s] from the extension [%s] must provide a type",
-                 parameterModel.getName(),
-                 ownerModelType, ownerName, extensionName));
+                                                         format("The parameter [%s] in the %s [%s] from the extension [%s] must provide a type",
+                                                                parameterModel.getName(),
+                                                                ownerModelType, ownerName, extensionName));
     }
 
     if (parameterModel.isRequired() && parameterModel.getDefaultValue() != null) {
       throw new IllegalParameterModelDefinitionException(
-          format("The parameter [%s] in the %s [%s] from the extension [%s] is required, and must not provide a default value",
-                 parameterModel.getName(), ownerModelType, ownerName,
-                 extensionName));
+                                                         format("The parameter [%s] in the %s [%s] from the extension [%s] is required, and must not provide a default value",
+                                                                parameterModel.getName(), ownerModelType, ownerName,
+                                                                extensionName));
     }
 
     if ((supportsGlobalReferences(parameterModel) && supportsGlobalReferences(parameterModel.getType())) ||
@@ -151,12 +151,12 @@ public final class ParameterModelValidator implements ModelValidator {
         .filter(subtype -> parameterNames.contains(getTopLevelTypeName(subtype))).findFirst();
     if (subTypeWithNameCollision.isPresent()) {
       throw new IllegalParameterModelDefinitionException(
-          format(
-              "The parameter [%s] in the %s [%s] from the extension [%s] can't have the same name as the ClassName or Alias of the declared subType [%s] for parameter [%s]",
-              getTopLevelTypeName(subTypeWithNameCollision.get()),
-              ownerModelType, ownerName, extensionName,
-              getType(subTypeWithNameCollision.get()).getSimpleName(),
-              parameterModel.getName()));
+                                                         format(
+                                                                "The parameter [%s] in the %s [%s] from the extension [%s] can't have the same name as the ClassName or Alias of the declared subType [%s] for parameter [%s]",
+                                                                getTopLevelTypeName(subTypeWithNameCollision.get()),
+                                                                ownerModelType, ownerName, extensionName,
+                                                                getType(subTypeWithNameCollision.get()).getSimpleName(),
+                                                                parameterModel.getName()));
     }
   }
 
@@ -165,8 +165,8 @@ public final class ParameterModelValidator implements ModelValidator {
         .ifPresent(group -> {
           if (!isInstantiable(group.getType().getDeclaringClass())) {
             throw new IllegalParameterModelDefinitionException(
-                format("The parameter group of type '%s' should be non abstract with a default constructor.",
-                       group.getType().getDeclaringClass()));
+                                                               format("The parameter group of type '%s' should be non abstract with a default constructor.",
+                                                                      group.getType().getDeclaringClass()));
           }
         });
   }

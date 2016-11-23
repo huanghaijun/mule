@@ -62,12 +62,12 @@ public final class ExclusiveParameterModelValidator implements ModelValidator {
 
         if (optionalParameters.size() < 2) {
           throw new IllegalParameterModelDefinitionException(format(
-              "In %s '%s', parameter group '%s' defines exclusive optional parameters, and thus should contain more than one "
-                  + "parameter marked as optional but %d was/were found",
-              getComponentModelTypeName(owner),
-              getModelName(owner),
-              model.getName(),
-              optionalParameters.size()));
+                                                                    "In %s '%s', parameter group '%s' defines exclusive optional parameters, and thus should contain more than one "
+                                                                        + "parameter marked as optional but %d was/were found",
+                                                                    getComponentModelTypeName(owner),
+                                                                    getModelName(owner),
+                                                                    model.getName(),
+                                                                    optionalParameters.size()));
         }
 
         String complexParameters = optionalParameters.stream()
@@ -77,12 +77,12 @@ public final class ExclusiveParameterModelValidator implements ModelValidator {
 
         if (!StringUtils.isBlank(complexParameters)) {
           throw new IllegalModelDefinitionException(format(
-              "In %s '%s', parameter group '%s' defines exclusive optional parameters and thus cannot contain any complex parameters,"
-                  + "but the following were found: [%s]",
-              getComponentModelTypeName(owner),
-              getModelName(owner),
-              model.getName(),
-              complexParameters));
+                                                           "In %s '%s', parameter group '%s' defines exclusive optional parameters and thus cannot contain any complex parameters,"
+                                                               + "but the following were found: [%s]",
+                                                           getComponentModelTypeName(owner),
+                                                           getModelName(owner),
+                                                           model.getName(),
+                                                           complexParameters));
         }
       }
     }.walk(extensionModel);

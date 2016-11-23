@@ -239,7 +239,8 @@ public class FlatExtensionDeclarationTestCase extends BaseExtensionDeclarationTe
 
   @Test(expected = IllegalOperationModelDefinitionException.class)
   public void operationWithParameterNamedTarget() {
-    extensionDeclarer.withOperation("invalidOperation").describedAs("").onDefaultParameterGroup().withOptionalParameter(TARGET_ATTRIBUTE)
+    extensionDeclarer.withOperation("invalidOperation").describedAs("").onDefaultParameterGroup()
+        .withOptionalParameter(TARGET_ATTRIBUTE)
         .ofType(toMetadataType(String.class));
 
     factory.createFrom(extensionDeclarer, createDescribingContext());
@@ -247,7 +248,8 @@ public class FlatExtensionDeclarationTestCase extends BaseExtensionDeclarationTe
 
   @Test(expected = IllegalParameterModelDefinitionException.class)
   public void expressionParameterWithFixedValue() {
-    extensionDeclarer.withOperation("invalidOperation").describedAs("").onDefaultParameterGroup().withOptionalParameter("expression")
+    extensionDeclarer.withOperation("invalidOperation").describedAs("").onDefaultParameterGroup()
+        .withOptionalParameter("expression")
         .ofType(toMetadataType(String.class)).withExpressionSupport(REQUIRED).defaultingTo("static");
 
     factory.createFrom(extensionDeclarer, createDescribingContext());

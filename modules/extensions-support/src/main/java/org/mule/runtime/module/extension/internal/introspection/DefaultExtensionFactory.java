@@ -233,15 +233,13 @@ public final class DefaultExtensionFactory implements ExtensionFactory {
     }
 
     private OperationModel toOperation(OperationDeclaration declaration) {
-      return fromCache(declaration, () ->
-        new ImmutableOperationModel(declaration.getName(),
-                                           declaration.getDescription(),
-                                           toParameterGroups(declaration.getParameterGroups()),
-                                           toOutputModel(declaration.getOutput()),
-                                           toOutputModel(declaration.getOutputAttributes()),
-                                           declaration.getDisplayModel(),
-                                           declaration.getModelProperties())
-      );
+      return fromCache(declaration, () -> new ImmutableOperationModel(declaration.getName(),
+                                                                      declaration.getDescription(),
+                                                                      toParameterGroups(declaration.getParameterGroups()),
+                                                                      toOutputModel(declaration.getOutput()),
+                                                                      toOutputModel(declaration.getOutputAttributes()),
+                                                                      declaration.getDisplayModel(),
+                                                                      declaration.getModelProperties()));
     }
 
     private List<ConnectionProviderModel> toConnectionProviders(List<ConnectionProviderDeclaration> declarations) {

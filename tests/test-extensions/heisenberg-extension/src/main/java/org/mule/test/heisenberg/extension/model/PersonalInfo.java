@@ -56,8 +56,7 @@ public class PersonalInfo {
   @Placement(order = 6)
   private Calendar dateOfGraduation;
 
-  public PersonalInfo() {
-  }
+  public PersonalInfo() {}
 
   public PersonalInfo(String name, Integer age) {
     this.name = name;

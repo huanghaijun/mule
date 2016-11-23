@@ -82,11 +82,11 @@ public class DataTypeModelEnricherTestCase extends AbstractMuleTestCase {
     when(annotatedOperation.getModelProperty(ImplementingTypeModelProperty.class)).thenReturn(empty());
     when(annotatedOperation.getModelProperty(ImplementingMethodModelProperty.class))
         .thenReturn(Optional.of(new ImplementingMethodModelProperty(method)));
-    mockParameters(annotatedOperation, new ParameterDeclaration[]{});
+    mockParameters(annotatedOperation, new ParameterDeclaration[] {});
 
     when(notAnnotatedOperation.getModelProperty(ImplementingTypeModelProperty.class)).thenReturn(empty());
     when(notAnnotatedOperation.getModelProperty(ImplementingMethodModelProperty.class)).thenReturn(empty());
-    mockParameters(notAnnotatedOperation, new ParameterDeclaration[]{});
+    mockParameters(notAnnotatedOperation, new ParameterDeclaration[] {});
   }
 
   @Test

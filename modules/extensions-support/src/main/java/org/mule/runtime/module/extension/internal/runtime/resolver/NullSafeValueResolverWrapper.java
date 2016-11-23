@@ -74,8 +74,8 @@ public class NullSafeValueResolverWrapper<T> implements ValueResolver<T> {
 
           if (field.isRequired()) {
             throw new IllegalParameterModelDefinitionException(
-                format("Class '%s' cannot be used with '@%s' parameter since it contains non optional fields",
-                       clazz.getName(), NullSafe.class.getSimpleName()));
+                                                               format("Class '%s' cannot be used with '@%s' parameter since it contains non optional fields",
+                                                                      clazz.getName(), NullSafe.class.getSimpleName()));
           }
 
           getDefaultValue(field).ifPresent(defaultValue -> resolverSet.add(field.getKey().getName().getLocalPart(),
@@ -106,8 +106,8 @@ public class NullSafeValueResolverWrapper<T> implements ValueResolver<T> {
       @Override
       protected void defaultVisit(MetadataType metadataType) {
         throw new IllegalParameterModelDefinitionException(
-            format("Cannot use @%s on type '%s'", NullSafe.class.getSimpleName(),
-                   getType(metadataType)));
+                                                           format("Cannot use @%s on type '%s'", NullSafe.class.getSimpleName(),
+                                                                  getType(metadataType)));
       }
     });
 

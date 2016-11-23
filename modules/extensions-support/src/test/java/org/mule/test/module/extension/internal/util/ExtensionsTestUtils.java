@@ -238,7 +238,8 @@ public abstract class ExtensionsTestUtils {
     return mockParameters(parameterizedModel, DEFAULT_GROUP_NAME, parameterModels);
   }
 
-  public static ParameterGroupModel mockParameters(ParameterizedModel parameterizedModel, String groupName, ParameterModel... parameterModels) {
+  public static ParameterGroupModel mockParameters(ParameterizedModel parameterizedModel, String groupName,
+                                                   ParameterModel... parameterModels) {
     ParameterGroupModel group = mock(ParameterGroupModel.class);
     when(group.getName()).thenReturn(groupName);
     when(group.getModelProperty(ParameterGroupModelProperty.class)).thenReturn(empty());
@@ -248,16 +249,19 @@ public abstract class ExtensionsTestUtils {
 
     return group;
   }
-  public static ParameterGroupDeclaration mockParameters(ParameterizedDeclaration declaration, ParameterDeclaration... parameters) {
+
+  public static ParameterGroupDeclaration mockParameters(ParameterizedDeclaration declaration,
+                                                         ParameterDeclaration... parameters) {
     return mockParameters(declaration, DEFAULT_GROUP_NAME, parameters);
   }
 
-  public static ParameterGroupDeclaration mockParameters(ParameterizedDeclaration declaration, String groupName, ParameterDeclaration... parameters) {
+  public static ParameterGroupDeclaration mockParameters(ParameterizedDeclaration declaration, String groupName,
+                                                         ParameterDeclaration... parameters) {
     ParameterGroupDeclaration group = mock(ParameterGroupDeclaration.class);
     when(group.getName()).thenReturn(groupName);
     when(declaration.getParameterGroups()).thenReturn(asList(group));
     when(declaration.getParameterGroup(groupName)).thenReturn(group);
-    List<ParameterDeclaration> params =  new ArrayList<>(asList(parameters));
+    List<ParameterDeclaration> params = new ArrayList<>(asList(parameters));
     when(group.getParameters()).thenReturn(params);
     when(declaration.getAllParameters()).thenReturn(params);
 

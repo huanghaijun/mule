@@ -106,7 +106,7 @@ public class DisplayModelEnricherTestCase extends AbstractMuleTestCase {
   @Test
   public void parseExampleAnnotationOnConfigParameter() {
     ExtensionDeclaration extensionDeclaration = declarer.getDeclaration();
-    List<ParameterDeclaration> parameters = extensionDeclaration.getConfigurations().get(0).getParameters();
+    List<ParameterDeclaration> parameters = extensionDeclaration.getConfigurations().get(0).getAllParameters();
 
     assertParameterExample(findParameter(parameters, "labAddress"), LAB_ADDRESS_EXAMPLE);
   }
@@ -118,7 +118,7 @@ public class DisplayModelEnricherTestCase extends AbstractMuleTestCase {
         getOperation(extensionDeclaration, HeisenbergOperations.OPERATION_WITH_EXAMPLE);
 
     assertThat(operation, is(notNullValue()));
-    List<ParameterDeclaration> parameters = operation.getParameters();
+    List<ParameterDeclaration> parameters = operation.getAllParameters();
 
     assertParameterExample(findParameter(parameters, GREETING_PARAMETER), OPERATION_PARAMETER_EXAMPLE);
   }

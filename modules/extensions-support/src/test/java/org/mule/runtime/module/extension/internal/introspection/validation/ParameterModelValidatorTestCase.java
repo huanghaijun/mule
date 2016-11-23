@@ -155,7 +155,8 @@ public class ParameterModelValidatorTestCase extends AbstractMuleTestCase {
   public void invalidModelDueToNonInstantiableParameterGroup() {
     final String nonInstantiableField = "nonInstantiableField";
     ParameterGroupDescriptor group =
-        new ParameterGroupDescriptor("group", new TypeWrapper(Serializable.class), getField(InvalidPojoParameterGroup.class, nonInstantiableField).get());
+        new ParameterGroupDescriptor("group", new TypeWrapper(Serializable.class),
+                                     getField(InvalidPojoParameterGroup.class, nonInstantiableField).get());
     ParameterGroupModel groupModel = mockParameters(operationModel, invalidParameterModel);
     when(groupModel.getModelProperty(ParameterGroupModelProperty.class))
         .thenReturn(Optional.of(new ParameterGroupModelProperty(group)));

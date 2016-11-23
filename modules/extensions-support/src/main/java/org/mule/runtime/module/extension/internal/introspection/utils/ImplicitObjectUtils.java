@@ -22,8 +22,7 @@ import java.util.List;
  */
 public final class ImplicitObjectUtils {
 
-  private ImplicitObjectUtils() {
-  }
+  private ImplicitObjectUtils() {}
 
   /**
    * Creates a {@link ResolverSet} based on the default values for the {@link ParameterModel}s in the {@code parametrizedModel}.

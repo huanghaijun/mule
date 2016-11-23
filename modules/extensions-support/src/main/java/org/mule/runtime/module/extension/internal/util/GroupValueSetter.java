@@ -49,8 +49,7 @@ public final class GroupValueSetter implements ValueSetter {
     model.getParameterGroupModels().stream()
         .filter(group -> !group.getName().equals(DEFAULT_GROUP_NAME))
         .forEach(group -> group.getModelProperty(ParameterGroupModelProperty.class)
-                         .ifPresent(property -> setters.add(new GroupValueSetter(property.getDescriptor())))
-        );
+            .ifPresent(property -> setters.add(new GroupValueSetter(property.getDescriptor()))));
 
     return setters.build();
   }

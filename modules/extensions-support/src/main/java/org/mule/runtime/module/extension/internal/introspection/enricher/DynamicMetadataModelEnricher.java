@@ -130,8 +130,8 @@ public class DynamicMetadataModelEnricher extends AbstractAnnotatedModelEnricher
   private void enrichWithDsql(OperationDeclaration declaration, Method method) {
     Query query = method.getAnnotation(Query.class);
     declaration.addModelProperty(new MetadataResolverFactoryModelProperty(
-        new QueryMetadataResolverFactory(query
-                                             .nativeOutputResolver(), query.entityResolver())));
+                                                                          new QueryMetadataResolverFactory(query
+                                                                              .nativeOutputResolver(), query.entityResolver())));
     addQueryModelProperties(declaration, query);
     declareDynamicType(declaration.getOutput());
     declareMetadataKeyId(declaration);
@@ -146,7 +146,7 @@ public class DynamicMetadataModelEnricher extends AbstractAnnotatedModelEnricher
             .getParameter().isAnnotationPresent(MetadataKeyId.class))
         .findFirst()
         .orElseThrow(() -> new IllegalParameterModelDefinitionException(
-            "Query operation must have a parameter annotated with @MetadataKeyId"));
+                                                                        "Query operation must have a parameter annotated with @MetadataKeyId"));
 
     parameterDeclaration.addModelProperty(new QueryParameterModelProperty(query.translator()));
     parameterDeclaration.setLayoutModel(builderFrom(parameterDeclaration.getLayoutModel()).asQuery().build());
@@ -188,13 +188,13 @@ public class DynamicMetadataModelEnricher extends AbstractAnnotatedModelEnricher
   }
 
   private Optional<MetadataKeyIdModelProperty> getMetadataKeyModelProperty(
-      ComponentDeclaration<? extends ComponentDeclaration> component) {
+                                                                           ComponentDeclaration<? extends ComponentDeclaration> component) {
     Optional<MetadataKeyIdModelProperty> keyId = findMetadataKeyIdInGroups(component);
     return keyId.isPresent() ? keyId : findMetadataKeyIdInParameters(component);
   }
 
   private Optional<MetadataKeyIdModelProperty> findMetadataKeyIdInGroups(
-      ComponentDeclaration<? extends ComponentDeclaration> component) {
+                                                                         ComponentDeclaration<? extends ComponentDeclaration> component) {
     return component.getParameterGroups().stream()
         .map(group -> group.getModelProperty(ParameterGroupModelProperty.class).orElse(null))
         .filter(group -> group != null)
@@ -205,7 +205,7 @@ public class DynamicMetadataModelEnricher extends AbstractAnnotatedModelEnricher
   }
 
   private Optional<MetadataKeyIdModelProperty> findMetadataKeyIdInParameters(
-      ComponentDeclaration<? extends ComponentDeclaration> component) {
+                                                                             ComponentDeclaration<? extends ComponentDeclaration> component) {
     return component.getParameterGroups().stream()
         .flatMap(g -> g.getParameters().stream())
         .filter(p -> getAnnotatedElement(p).map(element -> element.isAnnotationPresent(MetadataKeyId.class)).orElse(false))

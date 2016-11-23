@@ -201,7 +201,8 @@ public class AnnotationsBasedDescriberTestCase extends AbstractAnnotationsBasedD
     assertThat(configuration, is(notNullValue()));
     assertThat(configuration.getName(), equalTo(EXTENDED_CONFIG_NAME));
     assertThat(configuration.getAllParameters(), hasSize(29));
-    assertParameter(configuration.getAllParameters(), "extendedProperty", "", toMetadataType(String.class), true, SUPPORTED, null);
+    assertParameter(configuration.getAllParameters(), "extendedProperty", "", toMetadataType(String.class), true, SUPPORTED,
+                    null);
   }
 
   @Test(expected = IllegalConfigurationModelDefinitionException.class)
@@ -492,7 +493,8 @@ public class AnnotationsBasedDescriberTestCase extends AbstractAnnotationsBasedD
     operation = getOperation(extensionDeclaration, KILL_WITH_MULTIPLE_WILDCARD_WEAPONS);
     assertThat(operation, is(notNullValue()));
     assertThat(operation.getAllParameters(), hasSize(1));
-    assertParameter(operation.getAllParameters(), "wildCardWeapons", "", arrayOf(List.class, objectTypeBuilder(Weapon.class)), true,
+    assertParameter(operation.getAllParameters(), "wildCardWeapons", "", arrayOf(List.class, objectTypeBuilder(Weapon.class)),
+                    true,
                     SUPPORTED, null);
 
     operation = getOperation(extensionDeclaration, KILL_CUSTOM_OPERATION);

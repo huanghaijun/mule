@@ -189,7 +189,7 @@ public class HeisenbergOperations {
   }
 
   public ParameterResolver<String> literalEcho(
-      @DisplayName(OPERATION_PARAMETER_OVERRIDED_DISPLAY_NAME) ParameterResolver<String> literalExpression) {
+                                               @DisplayName(OPERATION_PARAMETER_OVERRIDED_DISPLAY_NAME) ParameterResolver<String> literalExpression) {
     return literalExpression;
   }
 

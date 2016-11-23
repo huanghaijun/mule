@@ -54,7 +54,8 @@ public class IdempotentDeclarationWalker extends DeclarationWalker {
   }
 
   @Override
-  public void onParameter(ParameterizedDeclaration owner, ParameterGroupDeclaration parameterGroup, ParameterDeclaration declaration) {
+  public void onParameter(ParameterizedDeclaration owner, ParameterGroupDeclaration parameterGroup,
+                          ParameterDeclaration declaration) {
     doOnce(parameters, declaration, p -> onParameter(parameterGroup, declaration));
   }
 
