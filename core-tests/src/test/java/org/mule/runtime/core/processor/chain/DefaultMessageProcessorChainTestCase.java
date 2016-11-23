@@ -776,9 +776,9 @@ public class DefaultMessageProcessorChainTestCase extends AbstractReactiveProces
     try {
       return super.process(messageProcessor, event);
     } finally {
+      final SimpleUnitTestSupportSchedulerService schedulerService =
+          (SimpleUnitTestSupportSchedulerService) (muleContext.getSchedulerService());
       if (processingStrategyFactory instanceof LegacyNonBlockingProcessingStrategyFactory) {
-        final SimpleUnitTestSupportSchedulerService schedulerService =
-            (SimpleUnitTestSupportSchedulerService) (muleContext.getSchedulerService());
         new PollingProber().check(new JUnitLambdaProbe(() -> {
           assertThat(schedulerService.getScheduledTasks(), greaterThanOrEqualTo(nonBlockingProcessorsExecuted.get()));
           return true;
