@@ -91,7 +91,10 @@ public abstract class AbstractFilteringMessageProcessor extends AbstractIntercep
         throw propagate(filterUnacceptedException(event));
       };
     } else {
-      return publisher -> empty();
+      return event -> {
+        event.getContext().onComplete();
+        return empty();
+      };
     }
   }
 

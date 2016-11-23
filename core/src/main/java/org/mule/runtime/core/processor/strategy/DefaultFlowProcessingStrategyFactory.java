@@ -7,20 +7,14 @@
 package org.mule.runtime.core.processor.strategy;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static org.mule.runtime.core.context.notification.AsyncMessageNotification.PROCESS_ASYNC_COMPLETE;
-import static org.mule.runtime.core.context.notification.AsyncMessageNotification.PROCESS_ASYNC_SCHEDULED;
-import static org.mule.runtime.core.processor.strategy.SynchronousProcessingStrategyFactory.SYNCHRONOUS_PROCESSING_STRATEGY_INSTANCE;
 import static org.mule.runtime.core.transaction.TransactionCoordination.isTransactionActive;
 import static reactor.core.publisher.Flux.from;
-import static reactor.core.publisher.Flux.just;
 import static reactor.core.scheduler.Schedulers.fromExecutorService;
-
 import org.mule.runtime.core.api.Event;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.construct.FlowConstruct;
 import org.mule.runtime.core.api.processor.strategy.ProcessingStrategy;
 import org.mule.runtime.core.api.scheduler.Scheduler;
-import org.mule.runtime.core.context.notification.AsyncMessageNotification;
 import org.mule.runtime.core.exception.MessagingException;
 import org.mule.runtime.core.util.rx.TransactionAwareExecutorServiceDecorator;
 

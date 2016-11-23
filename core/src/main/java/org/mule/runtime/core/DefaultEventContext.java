@@ -9,16 +9,23 @@ package org.mule.runtime.core;
 import static java.time.OffsetTime.now;
 
 import org.mule.runtime.core.api.CoreEventContext;
-import org.mule.runtime.core.api.EventContext;
 import org.mule.runtime.core.api.Event;
+import org.mule.runtime.core.api.EventContext;
 import org.mule.runtime.core.api.construct.FlowConstruct;
 import org.mule.runtime.core.api.context.notification.ProcessorsTrace;
 import org.mule.runtime.core.api.source.MessageSource;
 import org.mule.runtime.core.context.notification.DefaultProcessorsTrace;
 import org.mule.runtime.core.management.stats.ProcessingTime;
 
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.time.OffsetTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
+import reactor.core.publisher.MonoProcessor;
 
 /**
  * Default immutable implementation of {@link EventContext}.
@@ -29,9 +36,12 @@ public final class DefaultEventContext implements CoreEventContext, Serializable
 
   private static final long serialVersionUID = -3664490832964509653L;
 
+  private transient MonoProcessor<Event> monoProcessor = MonoProcessor.create();
+  private List<Subscriber> subscribers = new ArrayList<>();
+
   /**
    * Builds a new execution context with the given parameters.
-   * 
+   *
    * @param flow the flow that processes events of this context.
    * @param connectorName the name of the connector that received the first message for this context.
    */
@@ -41,7 +51,7 @@ public final class DefaultEventContext implements CoreEventContext, Serializable
 
   /**
    * Builds a new execution context with the given parameters.
-   * 
+   *
    * @param flow the flow that processes events of this context.
    * @param connectorName the name of the connector that received the first message for this context.
    * @param correlationId See {@link EventContext#getCorrelationId()}.
@@ -104,7 +114,7 @@ public final class DefaultEventContext implements CoreEventContext, Serializable
 
   /**
    * Builds a new execution context with the given parameters.
-   * 
+   *
    * @param flow the flow that processes events of this context.
    * @param connectorName the name of the connector that received the first message for this context.
    * @param correlationId the correlation id that was set by the {@link MessageSource} for the first {@link Event} of this
@@ -124,4 +134,37 @@ public final class DefaultEventContext implements CoreEventContext, Serializable
     return "DefaultMessageExecutionContext { id: " + id + "; correlationId: " + correlationId + "; flowName: " + flowName
         + "; serverId: " + serverId + " }";
   }
+
+  @Override
+  public void subscribe(Subscriber<? super Event> s) {
+    subscribers.add(s);
+    monoProcessor.subscribe(s);
+  }
+
+  @Override
+  public void onSubscribe(Subscription s) {
+    monoProcessor.onSubscribe(s);
+  }
+
+  @Override
+  public void onNext(Event event) {
+    monoProcessor.onNext(event);
+  }
+
+  @Override
+  public void onError(Throwable t) {
+    monoProcessor.onError(t);
+  }
+
+  @Override
+  public void onComplete() {
+    monoProcessor.onComplete();
+  }
+
+  private void readObject(ObjectInputStream in) throws Exception {
+    in.defaultReadObject();
+    monoProcessor = MonoProcessor.create();
+    subscribers.forEach(s -> monoProcessor.subscribe(s));
+  }
+
 }

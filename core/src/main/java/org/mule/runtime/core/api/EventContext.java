@@ -18,7 +18,7 @@ import java.time.OffsetTime;
  * @see Event
  * @since 4.0
  */
-public interface EventContext {
+public interface EventContext extends org.reactivestreams.Processor<Event, Event> {
 
 
   /**
