@@ -7,10 +7,10 @@
 package org.mule.tck.junit4;
 
 import static java.util.Arrays.asList;
-import static org.mule.tck.MuleTestUtils.processAsStreamAndBlock;
+import static org.mule.tck.MuleTestUtils.processSingleEventAndBlock;
 import static reactor.core.Exceptions.unwrap;
+import static reactor.core.publisher.Mono.from;
 import static reactor.core.publisher.Mono.just;
-
 import org.mule.runtime.core.api.Event;
 import org.mule.runtime.core.api.processor.Processor;
 import org.mule.runtime.core.api.scheduler.Scheduler;
@@ -22,6 +22,7 @@ import java.util.Collection;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.reactivestreams.Publisher;
+import reactor.core.publisher.Flux;
 
 /**
  * Abstract base test case extending {@link AbstractMuleContextTestCase} to be used when a {@link Processor} or
@@ -35,15 +36,15 @@ public abstract class AbstractReactiveProcessorTestCase extends AbstractMuleCont
 
   protected Scheduler scheduler;
 
-  private boolean reactive;
+  protected Mode mode;
 
-  public AbstractReactiveProcessorTestCase(boolean reactive) {
-    this.reactive = reactive;
+  public AbstractReactiveProcessorTestCase(Mode mode) {
+    this.mode = mode;
   }
 
   @Parameterized.Parameters
   public static Collection<Object[]> parameters() {
-    return asList(new Object[][] {{false}, {true}});
+    return asList(new Object[][] {{Mode.BLOCKING}, {Mode.MONO}, {Mode.FLUX}});
   }
 
   @Override
@@ -61,37 +62,55 @@ public abstract class AbstractReactiveProcessorTestCase extends AbstractMuleCont
   @Override
   protected Event process(Processor processor, Event event) throws Exception {
     try {
-      if (reactive) {
-        return processAsStreamAndBlock(event, processor);
-      } else {
-        return processor.process(event);
+      switch (mode) {
+        case BLOCKING:
+          return processor.process(event);
+        case MONO:
+          return processSingleEventAndBlock(event, processor);
+        case FLUX:
+          Flux.just(event).transform(processor).doOnNext(response -> response.getContext().onNext(response))
+              .doOnError(MessagingException.class, me -> me.getEvent().getContext().onError(me)).subscribe();
+          return from(event.getContext()).mapError(MessagingException.class, e -> messagingExceptionToException(e)).block();
+        default:
+          return null;
       }
     } catch (MessagingException msgException) {
-      // unwrap MessagingException to ensure same exception is thrown by blocking and non-blocking processing
-      throw (msgException.getCause() instanceof Exception) ? (Exception) msgException.getCause()
-          : new RuntimeException(msgException.getCause());
+      throw messagingExceptionToException(msgException);
     }
+  }
+
+  private Exception messagingExceptionToException(MessagingException msgException) {
+    // unwrap MessagingException to ensure same exception is thrown by blocking and non-blocking processing
+    return (msgException.getCause() instanceof Exception) ? (Exception) msgException.getCause()
+        : new RuntimeException(msgException.getCause());
   }
 
   /*
    * Do not unwrap MessagingException thrown by use of apply() for compatability with flow.process()
    */
   protected Event processFlow(Flow flow, Event event) throws Exception {
-    if (reactive) {
-      try {
-        return just(event)
-            .transform(flow)
-            .subscribe()
-            .blockMillis(RECEIVE_TIMEOUT);
-      } catch (Throwable exception) {
-        throw (Exception) unwrap(exception);
-      }
-    } else {
-      return flow.process(event);
+    switch (mode) {
+      case BLOCKING:
+        return flow.process(event);
+      case MONO:
+        try {
+          return just(event)
+              .transform(flow)
+              .subscribe()
+              .blockMillis(RECEIVE_TIMEOUT);
+        } catch (Throwable exception) {
+          throw (Exception) unwrap(exception);
+        }
+      case FLUX:
+        Flux.just(event).transform(flow).doOnNext(response -> response.getContext().onNext(response))
+            .doOnError(MessagingException.class, me -> me.getEvent().getContext().onError(me)).subscribe();
+        return from(event.getContext()).block();
+      default:
+        return null;
     }
   }
 
-  protected boolean isReactive() {
-    return reactive;
+  public enum Mode {
+    BLOCKING, MONO, FLUX
   }
 }

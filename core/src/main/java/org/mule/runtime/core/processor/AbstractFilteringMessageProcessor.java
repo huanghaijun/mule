@@ -23,6 +23,7 @@ import org.mule.runtime.core.exception.MessagingException;
 import java.util.function.Function;
 
 import org.reactivestreams.Publisher;
+import reactor.core.publisher.Mono;
 
 /**
  * Abstract {@link InterceptingMessageProcessor} that can be easily be extended and used for filtering message flow through a
@@ -91,7 +92,10 @@ public abstract class AbstractFilteringMessageProcessor extends AbstractIntercep
         throw propagate(filterUnacceptedException(event));
       };
     } else {
-      return publisher -> empty();
+      return event -> {
+        event.getContext().onComplete();
+        return empty();
+      };
     }
   }
 

@@ -6,6 +6,8 @@
  */
 package org.mule.runtime.core.util.rx;
 
+import org.mule.runtime.core.api.Event;
+
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -18,18 +20,21 @@ public final class Operators {
 
   /**
    * Custom function to be used with {@link reactor.core.publisher.Flux#handle(BiConsumer)} when a map function may return
-   * {@code null} and this should be interpreted as empty rather than causing an error.
+   * {@code null} and this should be interpreted as empty rather than causing an error. If null is return by the function then the
+   * {@link org.mule.runtime.core.api.EventContext} is also completed.
    * 
    * @param mapper map function
-   * @param <T> source type
-   * @param <R> result type
    * @return custom operator {@link BiConsumer} to be used with {@link reactor.core.publisher.Flux#handle(BiConsumer)}.
    */
-  public static <T, R> BiConsumer<T, SynchronousSink<R>> nullSafeMap(Function<T, R> mapper) {
+  public static BiConsumer<Event, SynchronousSink<Event>> nullSafeMap(Function<Event, Event> mapper) {
     return (t, sink) -> {
-      R r = mapper.apply(t);
-      if (r != null) {
-        sink.next(r);
+      if (t != null) {
+        Event r = mapper.apply(t);
+        if (r != null) {
+          sink.next(r);
+        } else {
+          t.getContext().onComplete();
+        }
       }
     };
   }

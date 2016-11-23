@@ -18,10 +18,15 @@ import org.mule.runtime.core.api.Event;
 import org.mule.runtime.core.api.Injector;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.construct.Flow;
+import org.mule.runtime.core.exception.MessagingException;
 
 import java.util.function.Function;
 
 import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import reactor.core.publisher.BlockingSink;
+import reactor.core.publisher.DirectProcessor;
+import reactor.core.publisher.Mono;
 
 /**
  * Utilities for creating test and Mock Mule objects
@@ -109,7 +114,7 @@ public final class MuleTestUtils {
     return null;
   }
 
-  public static Event processAsStreamAndBlock(Event event, Function<Publisher<Event>, Publisher<Event>> processor)
+  public static Event processSingleEventAndBlock(Event event, Function<Publisher<Event>, Publisher<Event>> processor)
       throws MuleException {
     try {
       return just(event)
@@ -120,7 +125,7 @@ public final class MuleTestUtils {
     }
   }
 
-  public static void processAsStream(Event event, Function<Publisher<Event>, Publisher<Event>> processor)
+  public static void processSingleEvent(Event event, Function<Publisher<Event>, Publisher<Event>> processor)
       throws MuleException {
     try {
       just(event)

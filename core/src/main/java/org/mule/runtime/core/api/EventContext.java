@@ -6,7 +6,14 @@
  */
 package org.mule.runtime.core.api;
 
+import org.mule.runtime.core.execution.CompletionHandler;
+
 import java.time.OffsetTime;
+import java.util.function.Function;
+
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import reactor.core.publisher.Mono;
 
 /**
  * Context representing a message that is received by a Mule Runtime via a connector source. This context is immutable and
@@ -18,7 +25,7 @@ import java.time.OffsetTime;
  * @see Event
  * @since 4.0
  */
-public interface EventContext {
+public interface EventContext extends Publisher<Event>, Subscriber<Event> {
 
 
   /**
