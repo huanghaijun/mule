@@ -1,10 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns="http://www.mulesoft.org/schema/mule/core"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="
-       http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+<mule xmlns:httpn="http://www.mulesoft.org/schema/mule/httpn" xmlns:email="http://www.mulesoft.org/schema/mule/email"
+      xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+      xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd
+http://www.mulesoft.org/schema/mule/httpn http://www.mulesoft.org/schema/mule/httpn/current/mule-httpn.xsd">
 
-    <!-- MULE-5011 empty config to avoid the hot deployment classloader choking on a missing config file -->
+    <email:smtp name="Email_SMTP" doc:name="Email SMTP" >
+        <email:smtp-connection host="smtp.gmail.com" port="465" user="alejandro.nosenzo@gmail.com" password="AjnRcn-90"/>
+    </email:smtp>
 
+    <httpn:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" >
+        <httpn:listener-connection host="localhost" port="8089" />
+    </httpn:listener-config>
+
+    <flow name="email-extensionFlow" >
+        <httpn:listener config-ref="HTTP_Listener_config" path="email-smtp" doc:name="HTTP : Listener" />
+
+        <set-variable variableName="http_xml_attachment_var" value="#[payload]"/>
+
+        <email:send config-ref="Email_SMTPS_Gmail" doc:name="Email : Send" >
+            <email:email-builder subject="Email Subject">
+                <email:to-addresses>
+                    <email:to-address value="alejandro.nosenzo@gmail.com" />
+                </email:to-addresses>
+                <email:body contentType="text/plain">
+                    <email:content>"in content works fine"</email:content>
+                </email:body>
+                <email:attachments>
+                    <email:email-attachment content="#[flowVars['http_xml_attachment_var']]" id="http_example.xml" contentType="application/xml"/>
+                 </email:attachments>
+            </email:email-builder>
+        </email:send>
+    </flow>
 </mule>
-
