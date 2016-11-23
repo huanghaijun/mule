@@ -46,8 +46,7 @@ public final class GroupValueSetter implements ValueSetter {
    */
   public static List<ValueSetter> settersFor(ParameterizedModel model) {
     ImmutableList.Builder<ValueSetter> setters = ImmutableList.builder();
-    model.getParameterGroupModels().stream()
-        .filter(group -> !group.getName().equals(DEFAULT_GROUP_NAME))
+    model.getParameterGroupModels()
         .forEach(group -> group.getModelProperty(ParameterGroupModelProperty.class)
             .ifPresent(property -> setters.add(new GroupValueSetter(property.getDescriptor()))));
 

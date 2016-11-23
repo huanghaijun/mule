@@ -7,7 +7,6 @@
 package org.mule.runtime.module.extension.internal.introspection;
 
 import static java.lang.String.format;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang.StringUtils.EMPTY;
@@ -101,7 +100,7 @@ public final class DefaultExtensionFactory implements ExtensionFactory {
    * Creates a new instance and uses the given {@code serviceRegistry} to locate instances of {@link ModelEnricher}
    *
    * @param serviceRegistry a {@link ServiceRegistry}
-   * @param classLoader the {@link ClassLoader} on which the {@code serviceRegistry} will search into
+   * @param classLoader     the {@link ClassLoader} on which the {@code serviceRegistry} will search into
    */
   public DefaultExtensionFactory(ServiceRegistry serviceRegistry, ClassLoader classLoader) {
     modelEnrichers = ImmutableList.copyOf(serviceRegistry.lookupProviders(ModelEnricher.class, classLoader));
@@ -275,26 +274,16 @@ public final class DefaultExtensionFactory implements ExtensionFactory {
       return new ImmutableParameterGroupModel(declaration.getName(),
                                               declaration.getDescription(),
                                               toParameters(declaration.getParameters()),
-                                              toExclusiveParametersModel(declaration),
+                                              toExclusiveParametersModels(declaration),
                                               declaration.getDisplayModel(),
                                               declaration.getLayoutModel(),
                                               declaration.getModelProperties());
     }
 
-    private ExclusiveParametersModel toExclusiveParametersModel(ParameterGroupDeclaration groupDeclaration) {
-      return groupDeclaration.getExclusiveParameters().map(exclusiveParameters -> {
-        List<String> exclusiveParameterNames;
-        if (exclusiveParameters.isExclusiveOptionals()) {
-          exclusiveParameterNames = groupDeclaration.getParameters().stream()
-              .filter(p -> !p.isRequired())
-              .map(ParameterDeclaration::getName)
-              .collect(toList());
-        } else {
-          exclusiveParameterNames = emptyList();
-        }
-
-        return new ImmutableExclusiveParametersModel(exclusiveParameterNames, exclusiveParameters.isRequiresOne());
-      }).orElse(null);
+    private List<ExclusiveParametersModel> toExclusiveParametersModels(ParameterGroupDeclaration groupDeclaration) {
+      return groupDeclaration.getExclusiveParameters().stream()
+          .map(exclusive -> new ImmutableExclusiveParametersModel(exclusive.getParameterNames(), exclusive.isRequiresOne()))
+          .collect(new ImmutableListCollector<>());
     }
 
     private List<ParameterModel> toParameters(List<ParameterDeclaration> declarations) {

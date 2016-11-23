@@ -16,7 +16,6 @@ import org.mule.metadata.api.model.MetadataType;
 import org.mule.metadata.api.model.ObjectType;
 import org.mule.metadata.api.model.SimpleType;
 import org.mule.runtime.api.meta.model.ExtensionModel;
-import org.mule.runtime.api.meta.model.parameter.ExclusiveParametersModel;
 import org.mule.runtime.api.meta.model.parameter.ParameterGroupModel;
 import org.mule.runtime.api.meta.model.parameter.ParameterModel;
 import org.mule.runtime.api.meta.model.parameter.ParameterizedModel;
@@ -51,39 +50,37 @@ public final class ExclusiveParameterModelValidator implements ModelValidator {
 
       @Override
       public void onParameterGroup(ParameterizedModel owner, ParameterGroupModel model) {
-        ExclusiveParametersModel exclusiveParametersModel = model.getExclusiveParametersModel().orElse(null);
-        if (exclusiveParametersModel == null) {
-          return;
-        }
+        model.getExclusiveParametersModels().forEach(exclusiveParametersModel -> {
 
-        List<ParameterModel> optionalParameters = model.getParameterModels().stream()
-            .filter(p -> !p.isRequired())
-            .collect(toList());
+          List<ParameterModel> optionalParameters = model.getParameterModels().stream()
+              .filter(p -> !p.isRequired())
+              .collect(toList());
 
-        if (optionalParameters.size() < 2) {
-          throw new IllegalParameterModelDefinitionException(format(
-                                                                    "In %s '%s', parameter group '%s' defines exclusive optional parameters, and thus should contain more than one "
-                                                                        + "parameter marked as optional but %d was/were found",
-                                                                    getComponentModelTypeName(owner),
-                                                                    getModelName(owner),
-                                                                    model.getName(),
-                                                                    optionalParameters.size()));
-        }
+          if (optionalParameters.size() < 2) {
+            throw new IllegalParameterModelDefinitionException(format(
+                                                                      "In %s '%s', parameter group '%s' defines exclusive optional parameters, and thus should contain more than one "
+                                                                          + "parameter marked as optional but %d was/were found",
+                                                                      getComponentModelTypeName(owner),
+                                                                      getModelName(owner),
+                                                                      model.getName(),
+                                                                      optionalParameters.size()));
+          }
 
-        String complexParameters = optionalParameters.stream()
-            .filter(p -> !isBasic(p.getType()))
-            .map(ParameterModel::getName)
-            .collect(joining(","));
+          String complexParameters = optionalParameters.stream()
+              .filter(p -> !isBasic(p.getType()) && exclusiveParametersModel.getExclusiveParameterNames().contains(p.getName()))
+              .map(ParameterModel::getName)
+              .collect(joining(","));
 
-        if (!StringUtils.isBlank(complexParameters)) {
-          throw new IllegalModelDefinitionException(format(
-                                                           "In %s '%s', parameter group '%s' defines exclusive optional parameters and thus cannot contain any complex parameters,"
-                                                               + "but the following were found: [%s]",
-                                                           getComponentModelTypeName(owner),
-                                                           getModelName(owner),
-                                                           model.getName(),
-                                                           complexParameters));
-        }
+          if (!StringUtils.isBlank(complexParameters)) {
+            throw new IllegalModelDefinitionException(format(
+                                                             "In %s '%s', parameter group '%s' defines exclusive optional parameters and thus cannot contain any complex parameters,"
+                                                                 + "but the following were found: [%s]",
+                                                             getComponentModelTypeName(owner),
+                                                             getModelName(owner),
+                                                             model.getName(),
+                                                             complexParameters));
+          }
+        });
       }
     }.walk(extensionModel);
   }

@@ -96,7 +96,7 @@ public class HeisenbergOperations {
     return killWithCustomMessage(new KillParameters(victim, goodbyeMessage));
   }
 
-  public String killWithCustomMessage(@ParameterGroup(name = KILL_WITH_GROUP) KillParameters killParameters) {
+  public String killWithCustomMessage(@ParameterGroup @Placement(group = KILL_WITH_GROUP) KillParameters killParameters) {
     return format("%s, %s", killParameters.getGoodbyeMessage(), killParameters.getVictim());
   }
 

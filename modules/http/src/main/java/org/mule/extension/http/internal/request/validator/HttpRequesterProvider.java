@@ -13,8 +13,8 @@ import static org.mule.extension.http.internal.HttpConnectorConstants.TLS_CONFIG
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.initialiseIfNeeded;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
 import static org.mule.runtime.core.util.concurrent.ThreadNameHelper.getPrefix;
-import static org.mule.runtime.extension.api.annotation.param.display.Group.ADVANCED;
-import static org.mule.runtime.extension.api.annotation.param.display.Group.CONNECTION;
+import static org.mule.runtime.extension.api.annotation.param.display.Placement.ADVANCED;
+import static org.mule.runtime.extension.api.annotation.param.display.Placement.CONNECTION;
 import static org.mule.runtime.api.meta.ExpressionSupport.NOT_SUPPORTED;
 import static org.mule.runtime.module.http.api.HttpConstants.Protocols.HTTP;
 import static org.mule.runtime.module.http.api.HttpConstants.Protocols.HTTPS;
@@ -104,7 +104,7 @@ public class HttpRequesterProvider implements CachedConnectionProvider<HttpClien
   @Parameter
   @Optional
   @DisplayName(TLS_CONFIGURATION)
-  @Placement(tab = TLS)
+  @Placement(tab = TLS, group = TLS_CONFIGURATION)
   private TlsContextFactory tlsContextFactory;
 
   /**

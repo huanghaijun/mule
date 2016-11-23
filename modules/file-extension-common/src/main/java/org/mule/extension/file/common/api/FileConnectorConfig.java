@@ -6,7 +6,7 @@
  */
 package org.mule.extension.file.common.api;
 
-import static org.mule.runtime.extension.api.annotation.param.display.Placement.ADVANCED_TAB;
+import static org.mule.runtime.extension.api.annotation.param.display.Placement.ADVANCED;
 import org.mule.runtime.api.lifecycle.Initialisable;
 import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.core.api.MuleContext;
@@ -36,7 +36,7 @@ public abstract class FileConnectorConfig implements Initialisable {
    */
   @Parameter
   @Optional
-  @Placement(tab = ADVANCED_TAB)
+  @Placement(tab = ADVANCED)
   private String defaultWriteEncoding;
 
   /**

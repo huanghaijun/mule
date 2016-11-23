@@ -7,7 +7,6 @@
 package org.mule.extension.http.internal.listener;
 
 import static java.util.Optional.ofNullable;
-import static org.mule.extension.http.internal.HttpConnectorConstants.CONFIGURATION_OVERRIDES;
 import static org.mule.extension.http.internal.HttpConnectorConstants.RESPONSE_SETTINGS;
 import static org.mule.extension.http.internal.listener.HttpRequestToResult.transform;
 import static org.mule.runtime.api.util.Preconditions.checkArgument;
@@ -15,7 +14,7 @@ import static org.mule.runtime.core.api.Event.setCurrentEvent;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.startIfNeeded;
 import static org.mule.runtime.core.config.ExceptionHelper.getTransportErrorMapping;
 import static org.mule.runtime.core.exception.Errors.ComponentIdentifiers.SECURITY;
-import static org.mule.runtime.extension.api.annotation.param.display.Placement.ADVANCED_TAB;
+import static org.mule.runtime.extension.api.annotation.param.display.Placement.ADVANCED;
 import static org.mule.runtime.module.http.api.HttpConstants.HttpStatus.BAD_REQUEST;
 import static org.mule.runtime.module.http.api.HttpConstants.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.mule.runtime.module.http.api.HttpConstants.Protocols.HTTP;
@@ -25,6 +24,7 @@ import org.mule.extension.http.api.HttpResponseAttributes;
 import org.mule.extension.http.api.HttpStreamingType;
 import org.mule.extension.http.api.listener.builder.HttpListenerErrorResponseBuilder;
 import org.mule.extension.http.api.listener.builder.HttpListenerSuccessResponseBuilder;
+import org.mule.extension.http.internal.HttpConnectorConstants;
 import org.mule.extension.http.internal.HttpListenerMetadataResolver;
 import org.mule.extension.http.internal.listener.server.HttpListenerConfig;
 import org.mule.extension.http.internal.listener.server.ModuleRequestHandler;
@@ -45,7 +45,6 @@ import org.mule.runtime.extension.api.annotation.param.Connection;
 import org.mule.runtime.extension.api.annotation.param.NullSafe;
 import org.mule.runtime.extension.api.annotation.param.Optional;
 import org.mule.runtime.extension.api.annotation.param.Parameter;
-import org.mule.runtime.extension.api.annotation.param.ParameterGroup;
 import org.mule.runtime.extension.api.annotation.param.UseConfig;
 import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
 import org.mule.runtime.extension.api.annotation.param.display.Placement;
@@ -96,28 +95,6 @@ public class HttpListener extends Source<Object, HttpRequestAttributes> {
   private static final String ERROR_RESPONSE_SETTINGS = "Error Response Settings";
   private static final String RESPONSE_CONTEXT = "responseContext";
 
-
-  public static final class ConfigurationOverrides {
-
-    /**
-     * By default, the request will be parsed (for example, a multi part request will be mapped as a Mule message with null payload
-     * and inbound attachments with each part). If this property is set to false, no parsing will be done, and the payload will
-     * always contain the raw contents of the HTTP request.
-     */
-    @Parameter
-    @Optional
-    @Placement(tab = ADVANCED_TAB)
-    private Boolean parseRequest;
-
-    public Boolean getParseRequest() {
-      return parseRequest;
-    }
-
-    public void setParseRequest(Boolean parseRequest) {
-      this.parseRequest = parseRequest;
-    }
-  }
-
   @Inject
   private MuleContext muleContext;
 
@@ -147,12 +124,18 @@ public class HttpListener extends Source<Object, HttpRequestAttributes> {
    */
   @Parameter
   @Optional(defaultValue = "AUTO")
-  @Placement(tab = ADVANCED_TAB)
+  @Placement(tab = ADVANCED, group = RESPONSE_SETTINGS)
   private HttpStreamingType responseStreamingMode;
 
-  @ParameterGroup(name = CONFIGURATION_OVERRIDES)
-  private ConfigurationOverrides configurationOverrides = new ConfigurationOverrides();
-
+  /**
+   * By default, the request will be parsed (for example, a multi part request will be mapped as a Mule message with null payload
+   * and inbound attachments with each part). If this property is set to false, no parsing will be done, and the payload will
+   * always contain the raw contents of the HTTP request.
+   */
+  @Parameter
+  @Optional
+  @Placement(tab = ADVANCED, group = HttpConnectorConstants.CONFIGURATION_OVERRIDES)
+  private Boolean parseRequest;
 
   private MethodRequestMatcher methodRequestMatcher = AcceptsAllMethodsRequestMatcher.instance();
   private HttpListenerResponseSender responseSender;
@@ -162,9 +145,9 @@ public class HttpListener extends Source<Object, HttpRequestAttributes> {
   private HttpResponseFactory responseFactory;
   private List<ErrorType> knownErrors;
 
-  //TODO: MULE-10900 figure out a way to have a shared group between callbacks and possibly regular params
   @OnSuccess
-  public void onSuccess(@Optional @DisplayName(RESPONSE_SETTINGS) @NullSafe HttpListenerSuccessResponseBuilder responseBuilder,
+  public void onSuccess(@Optional @DisplayName(RESPONSE_SETTINGS) @Placement(
+      group = RESPONSE_SETTINGS) @NullSafe HttpListenerSuccessResponseBuilder responseBuilder,
                         SourceCallbackContext callbackContext)
       throws Exception {
 
@@ -172,9 +155,9 @@ public class HttpListener extends Source<Object, HttpRequestAttributes> {
     responseSender.sendResponse(context, responseBuilder);
   }
 
-  //TODO: MULE-10900 figure out a way to have a shared group between callbacks and possibly regular params
   @OnError
-  public void onError(@Optional @DisplayName(ERROR_RESPONSE_SETTINGS) @NullSafe HttpListenerErrorResponseBuilder errorResponseBuilder,
+  public void onError(@Optional @DisplayName(ERROR_RESPONSE_SETTINGS) @Placement(
+      group = ERROR_RESPONSE_SETTINGS) @NullSafe HttpListenerErrorResponseBuilder errorResponseBuilder,
                       SourceCallbackContext callbackContext,
                       Error error) {
     // For now let's use the HTTP transport exception mapping since makes sense and the gateway depends on it.
@@ -232,7 +215,7 @@ public class HttpListener extends Source<Object, HttpRequestAttributes> {
     startIfNeeded(responseFactory);
 
     validatePath();
-    configurationOverrides.setParseRequest(config.resolveParseRequest(configurationOverrides.getParseRequest()));
+    parseRequest = config.resolveParseRequest(parseRequest);
     try {
       requestHandlerManager =
           server.addRequestHandler(new ListenerRequestMatcher(methodRequestMatcher, path), getRequestHandler(sourceCallback));
@@ -289,23 +272,22 @@ public class HttpListener extends Source<Object, HttpRequestAttributes> {
       private void sendErrorResponse(final HttpConstants.HttpStatus status, String message,
                                      HttpResponseReadyCallback responseCallback) {
         responseCallback.responseReady(new HttpResponseBuilder()
-                                           .setStatusCode(status.getStatusCode())
-                                           .setReasonPhrase(status.getReasonPhrase())
-                                           .setEntity(new ByteArrayHttpEntity(message.getBytes()))
-                                           .build(), new ResponseStatusCallback() {
+            .setStatusCode(status.getStatusCode())
+            .setReasonPhrase(status.getReasonPhrase())
+            .setEntity(new ByteArrayHttpEntity(message.getBytes()))
+            .build(), new ResponseStatusCallback() {
 
-          @Override
-          public void responseSendFailure(Throwable exception) {
-            LOGGER.warn("Error while sending {} response {}", status.getStatusCode(), exception.getMessage());
-            if (LOGGER.isDebugEnabled()) {
-              LOGGER.debug("Exception thrown", exception);
-            }
-          }
+              @Override
+              public void responseSendFailure(Throwable exception) {
+                LOGGER.warn("Error while sending {} response {}", status.getStatusCode(), exception.getMessage());
+                if (LOGGER.isDebugEnabled()) {
+                  LOGGER.debug("Exception thrown", exception);
+                }
+              }
 
-          @Override
-          public void responseSendSuccessfully() {
-          }
-        });
+              @Override
+              public void responseSendSuccessfully() {}
+            });
       }
     };
   }
@@ -322,7 +304,7 @@ public class HttpListener extends Source<Object, HttpRequestAttributes> {
 
   private Result<Object, HttpRequestAttributes> createResult(HttpRequestContext requestContext)
       throws HttpRequestParsingException {
-    return transform(requestContext, muleContext, configurationOverrides.getParseRequest(), listenerPath);
+    return transform(requestContext, muleContext, parseRequest, listenerPath);
     // TODO: MULE-9748 Analyse RequestContext use in HTTP extension
     // Update RequestContext ThreadLocal for backwards compatibility
     // setCurrentEvent(muleEvent);
@@ -392,7 +374,7 @@ public class HttpListener extends Source<Object, HttpRequestAttributes> {
         if (uriParamNames.contains(uriParamName)) {
           // TODO: MULE-8946 This should throw a MuleException
           throw new MuleRuntimeException(CoreMessages
-                                             .createStaticMessage(String.format(
+              .createStaticMessage(String.format(
                                                  "Http Listener with path %s contains duplicated uri param names", this.path)));
         }
         uriParamNames.add(uriParamName);
@@ -400,8 +382,8 @@ public class HttpListener extends Source<Object, HttpRequestAttributes> {
         if (pathPart.contains("*") && pathPart.length() > 1) {
           // TODO: MULE-8946 This should throw a MuleException
           throw new MuleRuntimeException(CoreMessages.createStaticMessage(String.format(
-              "Http Listener with path %s contains an invalid use of a wildcard. Wildcards can only be used at the end of the path (i.e.: /path/*) or between / characters (.i.e.: /path/*/anotherPath))",
-              this.path)));
+                                                                                        "Http Listener with path %s contains an invalid use of a wildcard. Wildcards can only be used at the end of the path (i.e.: /path/*) or between / characters (.i.e.: /path/*/anotherPath))",
+                                                                                        this.path)));
         }
       }
     }

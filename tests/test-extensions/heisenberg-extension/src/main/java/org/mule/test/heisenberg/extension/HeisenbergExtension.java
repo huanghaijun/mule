@@ -32,6 +32,7 @@ import org.mule.runtime.extension.api.annotation.param.Parameter;
 import org.mule.runtime.extension.api.annotation.param.ParameterGroup;
 import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
 import org.mule.runtime.extension.api.annotation.param.display.Example;
+import org.mule.runtime.extension.api.annotation.param.display.Placement;
 import org.mule.runtime.extension.api.annotation.param.display.Text;
 import org.mule.test.heisenberg.extension.exception.HeisenbergConnectionExceptionEnricher;
 import org.mule.test.heisenberg.extension.exception.HeisenbergException;
@@ -90,7 +91,8 @@ public class HeisenbergExtension implements Lifecycle, MuleContextAware {
   @ConfigName
   private String configName;
 
-  @ParameterGroup(name = PERSONAL_INFORMATION_GROUP_NAME)
+  @ParameterGroup
+  @Placement(group = PERSONAL_INFORMATION_GROUP_NAME)
   private PersonalInfo personalInfo = new PersonalInfo();
 
   @Parameter
@@ -114,7 +116,8 @@ public class HeisenbergExtension implements Lifecycle, MuleContextAware {
   @Optional
   private Map<String, List<String>> deathsBySeasons;
 
-  @ParameterGroup(name = RICIN_GROUP_NAME)
+  @ParameterGroup
+  @Placement(group = RICIN_GROUP_NAME)
   private RicinGroup ricinGroup;
 
   @Parameter

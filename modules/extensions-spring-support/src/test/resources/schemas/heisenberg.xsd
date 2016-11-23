@@ -668,13 +668,13 @@
     <xs:complexType name="AliasType">
         <xs:complexContent>
             <xs:extension xmlns:mule="http://www.mulesoft.org/schema/mule/core" base="mule:abstractOperatorType">
+                <xs:attribute type="mule:expressionString" use="required" name="greeting"></xs:attribute>
                 <xs:attribute type="mule:expressionString" use="optional" default="Heisenberg" name="myName"></xs:attribute>
                 <xs:attribute type="mule:expressionInt" use="optional" default="50" name="age"></xs:attribute>
                 <xs:attribute type="mule:expressionDateTime" use="optional" name="dateOfConception"></xs:attribute>
                 <xs:attribute type="mule:expressionDateTime" use="optional" name="dateOfBirth"></xs:attribute>
                 <xs:attribute type="mule:expressionDateTime" use="optional" name="dateOfDeath"></xs:attribute>
                 <xs:attribute type="mule:substitutableDateTime" use="optional" name="dateOfGraduation"></xs:attribute>
-                <xs:attribute type="mule:expressionString" use="required" name="greeting"></xs:attribute>
                 <xs:attribute type="xs:string" use="optional" name="target">
                     <xs:annotation>
                         <xs:documentation>The name of a variable on which the operation's output will be placed</xs:documentation>

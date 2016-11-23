@@ -11,8 +11,8 @@ import static org.mule.extension.http.internal.HttpConnectorConstants.OTHER_SETT
 import static org.mule.extension.http.internal.HttpConnectorConstants.REQUEST_SETTINGS;
 import static org.mule.extension.http.internal.HttpConnectorConstants.RESPONSE_SETTINGS;
 import static org.mule.extension.http.internal.HttpConnectorConstants.URL_CONFIGURATION;
+import static org.mule.runtime.extension.api.annotation.param.display.Placement.ADVANCED;
 import static org.mule.runtime.api.meta.ExpressionSupport.NOT_SUPPORTED;
-import static org.mule.runtime.extension.api.annotation.param.display.Placement.ADVANCED_TAB;
 import org.mule.extension.http.api.HttpSendBodyMode;
 import org.mule.extension.http.api.HttpStreamingType;
 import org.mule.extension.http.api.request.RamlApiConfiguration;
@@ -58,7 +58,7 @@ public class HttpRequesterConfig implements Initialisable {
    */
   @Parameter
   @Optional(defaultValue = "true")
-  @Placement(tab = ADVANCED_TAB, group = REQUEST_SETTINGS, order = 1)
+  @Placement(tab = ADVANCED, group = REQUEST_SETTINGS, order = 1)
   private Function<Event, Boolean> followRedirects;
 
   /**
@@ -67,7 +67,7 @@ public class HttpRequesterConfig implements Initialisable {
    */
   @Parameter
   @Optional(defaultValue = "AUTO")
-  @Placement(tab = ADVANCED_TAB, group = REQUEST_SETTINGS, order = 2)
+  @Placement(tab = ADVANCED, group = REQUEST_SETTINGS, order = 2)
   private Function<Event, HttpSendBodyMode> sendBodyMode;
 
   /**
@@ -77,7 +77,7 @@ public class HttpRequesterConfig implements Initialisable {
    */
   @Parameter
   @Optional(defaultValue = "AUTO")
-  @Placement(tab = ADVANCED_TAB, group = REQUEST_SETTINGS, order = 3)
+  @Placement(tab = ADVANCED, group = REQUEST_SETTINGS, order = 3)
   @Summary("Defines if the request should be sent using streaming or not. If this attribute is not present, "
       + "the behavior will depend on the type of the payload (it will stream only for InputStream).")
   private Function<Event, HttpStreamingType> requestStreamingMode;
@@ -89,7 +89,7 @@ public class HttpRequesterConfig implements Initialisable {
    */
   @Parameter
   @Optional(defaultValue = "true")
-  @Placement(tab = ADVANCED_TAB, group = RESPONSE_SETTINGS, order = 1)
+  @Placement(tab = ADVANCED, group = RESPONSE_SETTINGS, order = 1)
   @Summary("Indicates if the HTTP response should be parsed, or directly receive the raw content")
   private Function<Event, Boolean> parseResponse;
 
@@ -99,7 +99,7 @@ public class HttpRequesterConfig implements Initialisable {
    */
   @Parameter
   @Optional
-  @Placement(tab = ADVANCED_TAB, group = RESPONSE_SETTINGS, order = 2)
+  @Placement(tab = ADVANCED, group = RESPONSE_SETTINGS, order = 2)
   private Function<Event, Integer> responseTimeout;
 
   /**
@@ -108,7 +108,7 @@ public class HttpRequesterConfig implements Initialisable {
   @Parameter
   @Optional(defaultValue = "true")
   @Expression(NOT_SUPPORTED)
-  @Placement(tab = ADVANCED_TAB, group = OTHER_SETTINGS)
+  @Placement(tab = ADVANCED, group = OTHER_SETTINGS)
   private boolean enableCookies;
 
   /**
