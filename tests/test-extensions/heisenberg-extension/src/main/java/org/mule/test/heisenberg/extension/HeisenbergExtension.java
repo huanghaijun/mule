@@ -99,7 +99,7 @@ public class HeisenbergExtension implements Lifecycle, MuleContextAware {
 
   @Parameter
   @Optional
-  private List<ExtendedPersonalInfo> familyInfo;
+  private List<ExtendedPersonalInfo> familyInformations;
 
   @Parameter
   private List<String> enemies = new LinkedList<>();
@@ -150,7 +150,7 @@ public class HeisenbergExtension implements Lifecycle, MuleContextAware {
 
   @Parameter
   @Optional
-  private List<?> wildCardList;
+  private List<?> wildCards;
 
   @Parameter
   @Optional
