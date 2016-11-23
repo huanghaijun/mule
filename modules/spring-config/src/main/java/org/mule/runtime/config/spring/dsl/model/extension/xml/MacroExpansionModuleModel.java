@@ -191,7 +191,7 @@ public class MacroExpansionModuleModel {
 
     processorChainBuilder.addParameter("returnsVoid", Boolean.toString(returnsVoidTypeVisitor.returnsVoid), false);
     Map<String, String> propertiesMap = extractProperties(operationRefModel, extensionModel);
-    Map<String, String> parametersMap = extractParameters(operationRefModel, operationModel.getParameterModels());
+    Map<String, String> parametersMap = extractParameters(operationRefModel, operationModel.getAllParameterModels());
     ComponentModel propertiesComponentModel =
         getParameterChild(propertiesMap, "module-operation-properties", "module-operation-property-entry");
     ComponentModel parametersComponentModel =
@@ -262,7 +262,7 @@ public class MacroExpansionModuleModel {
       valuesMap
           .putAll(extractParameters(configRefComponentModel,
                                     extensionModel.getConfigurationModel(MODULE_CONFIG_GLOBAL_ELEMENT_NAME).get()
-                                        .getParameterModels()));
+                                        .getAllParameterModels()));
     }
     return valuesMap;
   }

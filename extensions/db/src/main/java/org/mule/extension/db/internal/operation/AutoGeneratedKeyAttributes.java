@@ -6,13 +6,12 @@
  */
 package org.mule.extension.db.internal.operation;
 
-import org.mule.runtime.extension.api.annotation.param.Parameter;
+import static org.mule.runtime.extension.api.annotation.param.display.Placement.ADVANCED;
 import org.mule.runtime.extension.api.annotation.param.Optional;
+import org.mule.runtime.extension.api.annotation.param.Parameter;
 import org.mule.runtime.extension.api.annotation.param.display.Placement;
 
 import java.util.List;
-
-import static org.mule.runtime.extension.api.annotation.param.display.Group.ADVANCED;
 
 /**
  * Parameters to configure if and how should keys be auto generated

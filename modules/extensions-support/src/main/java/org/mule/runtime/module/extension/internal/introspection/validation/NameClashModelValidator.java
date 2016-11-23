@@ -163,7 +163,8 @@ public final class NameClashModelValidator implements ModelValidator {
       if (!repeatedParameters.isEmpty()) {
         throw new IllegalModelDefinitionException(format("Extension '%s' defines the %s '%s' which has parameters "
             + "with repeated names. Offending parameters are: [%s]",
-                                                         extensionModel.getName(), model.getClass().getSimpleName(),
+                                                         extensionModel.getName(),
+                                                         getComponentModelTypeName(model),
                                                          model.getName(), Joiner.on(",").join(repeatedParameters)));
       }
     }

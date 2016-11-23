@@ -6,14 +6,13 @@
  */
 package org.mule.extension.db.internal.domain.connection.oracle;
 
+import static org.mule.runtime.extension.api.annotation.param.display.Placement.CONNECTION;
 import org.mule.extension.db.internal.domain.connection.BaseDbConnectionParameters;
 import org.mule.extension.db.internal.domain.connection.DataSourceConfig;
-import org.mule.runtime.extension.api.annotation.param.Parameter;
 import org.mule.runtime.extension.api.annotation.param.Optional;
+import org.mule.runtime.extension.api.annotation.param.Parameter;
 import org.mule.runtime.extension.api.annotation.param.display.Password;
 import org.mule.runtime.extension.api.annotation.param.display.Placement;
-
-import static org.mule.runtime.extension.api.annotation.param.display.Group.CONNECTION;
 
 /**
  * /**

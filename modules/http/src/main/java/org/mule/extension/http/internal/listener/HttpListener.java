@@ -7,6 +7,7 @@
 package org.mule.extension.http.internal.listener;
 
 import static java.util.Optional.ofNullable;
+import static org.mule.extension.http.internal.HttpConnectorConstants.CONFIGURATION_OVERRIDES;
 import static org.mule.extension.http.internal.HttpConnectorConstants.RESPONSE_SETTINGS;
 import static org.mule.extension.http.internal.listener.HttpRequestToResult.transform;
 import static org.mule.runtime.api.util.Preconditions.checkArgument;
@@ -24,7 +25,6 @@ import org.mule.extension.http.api.HttpResponseAttributes;
 import org.mule.extension.http.api.HttpStreamingType;
 import org.mule.extension.http.api.listener.builder.HttpListenerErrorResponseBuilder;
 import org.mule.extension.http.api.listener.builder.HttpListenerSuccessResponseBuilder;
-import org.mule.extension.http.internal.HttpConnectorConstants;
 import org.mule.extension.http.internal.HttpListenerMetadataResolver;
 import org.mule.extension.http.internal.listener.server.HttpListenerConfig;
 import org.mule.extension.http.internal.listener.server.ModuleRequestHandler;
@@ -134,7 +134,7 @@ public class HttpListener extends Source<Object, HttpRequestAttributes> {
    */
   @Parameter
   @Optional
-  @Placement(tab = ADVANCED, group = HttpConnectorConstants.CONFIGURATION_OVERRIDES)
+  @Placement(tab = ADVANCED, group = CONFIGURATION_OVERRIDES)
   private Boolean parseRequest;
 
   private MethodRequestMatcher methodRequestMatcher = AcceptsAllMethodsRequestMatcher.instance();

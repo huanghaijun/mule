@@ -6,6 +6,7 @@
  */
 package org.mule.extension.db.internal.domain.connection.datasource;
 
+import static org.mule.runtime.extension.api.annotation.param.display.Placement.CONNECTION;
 import org.mule.extension.db.internal.domain.connection.DataSourceConfig;
 import org.mule.extension.db.internal.domain.connection.DbConnectionProvider;
 import org.mule.runtime.api.connection.ConnectionProvider;
@@ -18,8 +19,6 @@ import java.util.Optional;
 
 import javax.sql.DataSource;
 import javax.sql.XADataSource;
-
-import static org.mule.runtime.extension.api.annotation.param.display.Group.CONNECTION;
 
 /**
  * {@link ConnectionProvider} implementation which creates DB connections from a referenced {@link

@@ -6,11 +6,14 @@
  */
 package org.mule.extension.db.api.param;
 
+import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.mule.extension.db.api.param.DbNameConstants.SQL_QUERY_TEXT;
+import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
+import static org.mule.runtime.extension.api.annotation.param.display.Placement.ADVANCED;
 import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.extension.api.annotation.metadata.MetadataKeyId;
 import org.mule.runtime.extension.api.annotation.param.Optional;
 import org.mule.runtime.extension.api.annotation.param.Parameter;
-import org.mule.runtime.extension.api.annotation.param.ParameterGroup;
 import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
 import org.mule.runtime.extension.api.annotation.param.display.Placement;
 import org.mule.runtime.extension.api.annotation.param.display.Text;
@@ -18,18 +21,13 @@ import org.mule.runtime.extension.api.annotation.param.display.Text;
 import java.util.LinkedList;
 import java.util.List;
 
-import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.mule.extension.db.api.param.DbNameConstants.SQL_QUERY_TEXT;
-import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
-import static org.mule.runtime.extension.api.annotation.param.display.Group.ADVANCED;
-
 /**
  * Base class containing common attributes for a statement.
  *
  * @param <T> the generic type of the implementing type
  * @since 4.0
  */
-public abstract class StatementDefinition<T extends StatementDefinition> {
+public abstract class StatementDefinition<T extends StatementDefinition> extends QuerySettings {
 
   /**
    * The text of the SQL query to be executed
@@ -41,13 +39,6 @@ public abstract class StatementDefinition<T extends StatementDefinition> {
   @Placement(order = 1)
   @MetadataKeyId
   protected String sql;
-
-
-  /**
-   * Parameters to configure the query
-   */
-  @ParameterGroup
-  protected QuerySettings settings = new QuerySettings();
 
   /**
    * Allows to optionally specify the type of one or more of the parameters in the query. If provided, you're not even required to
@@ -106,7 +97,8 @@ public abstract class StatementDefinition<T extends StatementDefinition> {
 
     copy.sql = sql;
     copy.parameterTypes = new LinkedList<>(parameterTypes);
-    copy.setSettings(settings);
+    copy.queryTimeout = queryTimeout;
+    copy.queryTimeoutUnit = queryTimeoutUnit;
     return (T) copy;
   }
 
@@ -131,13 +123,5 @@ public abstract class StatementDefinition<T extends StatementDefinition> {
 
   public void setSql(String sql) {
     this.sql = sql;
-  }
-
-  public QuerySettings getSettings() {
-    return settings;
-  }
-
-  public void setSettings(QuerySettings settings) {
-    this.settings = settings;
   }
 }

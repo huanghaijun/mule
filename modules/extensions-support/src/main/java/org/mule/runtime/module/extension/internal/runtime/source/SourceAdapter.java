@@ -15,6 +15,8 @@ import org.mule.runtime.api.connection.ConnectionException;
 import org.mule.runtime.api.connection.ConnectionHandler;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.exception.MuleRuntimeException;
+import org.mule.runtime.api.lifecycle.Startable;
+import org.mule.runtime.api.lifecycle.Stoppable;
 import org.mule.runtime.api.meta.model.ExtensionModel;
 import org.mule.runtime.api.meta.model.source.SourceModel;
 import org.mule.runtime.core.api.DefaultMuleException;
@@ -23,11 +25,8 @@ import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.connector.ConnectionManager;
 import org.mule.runtime.core.api.construct.FlowConstruct;
 import org.mule.runtime.core.api.construct.FlowConstructAware;
-import org.mule.runtime.api.lifecycle.Startable;
-import org.mule.runtime.api.lifecycle.Stoppable;
 import org.mule.runtime.core.exception.MessagingException;
 import org.mule.runtime.core.execution.ExceptionCallback;
-import org.mule.runtime.core.execution.NullCompletionHandler;
 import org.mule.runtime.core.util.func.UnsafeRunnable;
 import org.mule.runtime.extension.api.annotation.param.Connection;
 import org.mule.runtime.extension.api.annotation.param.UseConfig;
@@ -109,13 +108,13 @@ public final class SourceAdapter implements Startable, Stoppable, FlowConstructA
 
   private SourceCompletionHandlerFactory doCreateCompletionHandler(SourceCallbackModelProperty modelProperty) {
     final SourceCallbackExecutor onSuccessExecutor =
-        getMethodExecutor(modelProperty.getOnSuccessMethod(), successCallbackParameters);
-    final SourceCallbackExecutor onErrorExecutor = getMethodExecutor(modelProperty.getOnErrorMethod(), errorCallbackParameters);
+        getMethodExecutor(modelProperty.getOnSuccessMethod());
+    final SourceCallbackExecutor onErrorExecutor = getMethodExecutor(modelProperty.getOnErrorMethod());
 
     return context -> new DefaultSourceCompletionHandler(onSuccessExecutor, onErrorExecutor, context);
   }
 
-  private SourceCallbackExecutor getMethodExecutor(Optional<Method> method, ResolverSet parameters) {
+  private SourceCallbackExecutor getMethodExecutor(Optional<Method> method) {
     return method.map(m -> (SourceCallbackExecutor) new ReflectiveSourceCallbackExecutor(extensionModel, configurationInstance,
                                                                                          sourceModel, source, m,
                                                                                          muleContext))

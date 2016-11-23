@@ -6,14 +6,13 @@
  */
 package org.mule.extension.db.api.param;
 
-import org.mule.runtime.extension.api.annotation.param.Parameter;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.mule.runtime.extension.api.annotation.param.display.Placement.ADVANCED;
 import org.mule.runtime.extension.api.annotation.param.Optional;
+import org.mule.runtime.extension.api.annotation.param.Parameter;
 import org.mule.runtime.extension.api.annotation.param.display.Placement;
 
 import java.util.concurrent.TimeUnit;
-
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.mule.runtime.extension.api.annotation.param.display.Group.ADVANCED;
 
 /**
  * Parameters to configure queries
@@ -30,7 +29,7 @@ public class QuerySettings {
   @Parameter
   @Optional(defaultValue = "0")
   @Placement(tab = ADVANCED, group = TIMEOUT_CONFIGURATION)
-  private int queryTimeout = 0;
+  protected int queryTimeout = 0;
 
   /**
    * A {@link TimeUnit} which qualifies the {@link #queryTimeout}
@@ -38,7 +37,7 @@ public class QuerySettings {
   @Parameter
   @Optional(defaultValue = "SECONDS")
   @Placement(tab = ADVANCED, group = TIMEOUT_CONFIGURATION)
-  private TimeUnit queryTimeoutUnit = SECONDS;
+  protected TimeUnit queryTimeoutUnit = SECONDS;
 
   public int getQueryTimeout() {
     return queryTimeout;
@@ -46,5 +45,13 @@ public class QuerySettings {
 
   public TimeUnit getQueryTimeoutUnit() {
     return queryTimeoutUnit;
+  }
+
+  public void setQueryTimeout(int queryTimeout) {
+    this.queryTimeout = queryTimeout;
+  }
+
+  public void setQueryTimeoutUnit(TimeUnit queryTimeoutUnit) {
+    this.queryTimeoutUnit = queryTimeoutUnit;
   }
 }
