@@ -64,7 +64,8 @@ final class JmsOperationCommons {
       if (LOGGER.isDebugEnabled()) {
         LOGGER.debug("Registering pending ACK on session: " + session.getAckId());
       }
-      String id = session.getAckId().orElseThrow(() -> new IllegalArgumentException("An AckId is required when MANUAL AckMode is set"));
+      String id =
+          session.getAckId().orElseThrow(() -> new IllegalArgumentException("An AckId is required when MANUAL AckMode is set"));
 
       connection.registerMessageForAck(id, received);
     }

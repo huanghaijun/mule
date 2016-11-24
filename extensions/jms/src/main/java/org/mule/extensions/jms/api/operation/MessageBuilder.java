@@ -84,7 +84,7 @@ public class MessageBuilder {
    * the body type of the {@code body}
    */
   @Parameter
-  @Optional(defaultValue = "text/plain")
+  @Optional(defaultValue = "*/*")
   @DisplayName("ContentType")
   private String contentType;
 

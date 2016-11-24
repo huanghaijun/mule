@@ -9,7 +9,7 @@
         <jmsn:publish config-ref="config" destination="#[dw:variables.initialDestination]">
             <jmsn:message-builder>
                 <jmsn:properties>
-                    #[dw:{initialProperty: variables.propertyValue}]
+                    #[dw:{(variables.initialProperty): variables.propertyValue}]
                 </jmsn:properties>
             </jmsn:message-builder>
         </jmsn:publish>
@@ -19,7 +19,7 @@
         <jmsn:consume config-ref="config" destination="#[dw:variables.initialDestination]" maximumWaitTime="1000"/>
         <jmsn:publish config-ref="config" destination="#[dw:variables.finalDestination]">
             <jmsn:message-builder jmsxProperties="#[dw:attributes.properties.jmsxProperties]">
-                <jmsn:body>#[dw:variables.bridgePrefix]</jmsn:body>
+                <jmsn:body>#[dw:variables.bridgePrefix ++ payload]</jmsn:body>
                 <jmsn:properties>#[dw:attributes.properties.userProperties]</jmsn:properties>
             </jmsn:message-builder>
         </jmsn:publish>

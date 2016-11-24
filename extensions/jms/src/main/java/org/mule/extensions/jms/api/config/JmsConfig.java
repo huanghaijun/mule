@@ -53,7 +53,7 @@ public class JmsConfig implements Initialisable {
    * the content type of the message content
    */
   @Parameter
-  @Optional(defaultValue = "text/plain")
+  @Optional(defaultValue = "*/*")
   private String contentType;
 
   /**

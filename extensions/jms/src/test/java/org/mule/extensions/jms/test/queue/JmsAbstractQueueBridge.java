@@ -26,12 +26,16 @@ public abstract class JmsAbstractQueueBridge extends JmsAbstractTestCase {
   private static final String BRIDGE_FLOW = "bridge";
   private static final String SEND_PAYLOAD_FLOW = "send-payload";
   private static final String BRIDGE_RECEIVER_FLOW = "bridge-receiver";
+
   private static final String INITIAL_DESTINATION = "initialQueue";
   private static final String INITIAL_DESTINATION_VAR = "initialDestination";
+
   private static final String FINAL_DESTINATION = "finalQueue";
   private static final String FINAL_DESTINATION_VAR = "finalDestination";
+
   private static final String PROPERTY_KEY_VAR = "initialProperty";
   private static final String PROPERTY_KEY_VALUE = "INIT_PROPERTY";
+
   private static final String PROPERTY_VALUE_VAR = "propertyValue";
   private static final String PROPERTY_VALUE_VALUE = "Custom Value";
 

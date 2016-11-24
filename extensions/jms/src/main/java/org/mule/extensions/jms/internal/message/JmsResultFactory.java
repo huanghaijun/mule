@@ -89,8 +89,8 @@ public class JmsResultFactory {
   private JmsAttributes createJmsAttributes(JmsHeaders jmsHeaders, JmsMessageProperties jmsProperties,
                                             Optional<String> ackId) {
     DefaultJmsAttributes.Builder builder = DefaultJmsAttributes.Builder.newInstance()
-      .withHeaders(jmsHeaders)
-      .withProperties(jmsProperties);
+        .withHeaders(jmsHeaders)
+        .withProperties(jmsProperties);
 
     ackId.ifPresent(builder::withAckId);
 
@@ -133,7 +133,7 @@ public class JmsResultFactory {
     addTimestampProperty(jmsMessage, headersBuilder);
     addTypeProperty(jmsMessage, headersBuilder);
 
-    if (specification.equals(JMS_2_0)){
+    if (specification.equals(JMS_2_0)) {
       addDeliveryTimeProperty(jmsMessage, headersBuilder);
     }
 
@@ -212,8 +212,8 @@ public class JmsResultFactory {
 
   private JmsDestination getDestination(Destination value) throws JMSException {
     return value instanceof Queue
-      ? new JmsDestination(((Queue) value).getQueueName(), QUEUE)
-      : new JmsDestination(((Topic) value).getTopicName(), TOPIC);
+        ? new JmsDestination(((Queue) value).getQueueName(), QUEUE)
+        : new JmsDestination(((Topic) value).getTopicName(), TOPIC);
   }
 
   private interface JmsHeaderValueSupplier<T> {

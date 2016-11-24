@@ -140,8 +140,8 @@ public class JmsMessageUtils {
 
       if (nonCompliant) {
         LOGGER.warn(format("Header: %s is not compliant with JMS specification (sec. 3.5.1, 3.8.1.1). It will cause "
-                             + "problems in other applications. Please update your application code to correct this. "
-                             +"Mule renamed it to %s",name, sb.toString()));
+            + "problems in other applications. Please update your application code to correct this. "
+            + "Mule renamed it to %s", name, sb.toString()));
       }
 
       return sb.toString();

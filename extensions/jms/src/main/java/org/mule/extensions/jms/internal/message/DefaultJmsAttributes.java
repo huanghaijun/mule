@@ -66,29 +66,28 @@ class DefaultJmsAttributes implements JmsAttributes {
     private JmsHeaders headers;
     private String ackId;
 
-    private Builder() {
-    }
+    private Builder() {}
 
-    public static Builder newInstance(){
+    public static Builder newInstance() {
       return new Builder();
     }
 
-    public Builder withProperties(JmsMessageProperties properties){
+    public Builder withProperties(JmsMessageProperties properties) {
       this.properties = properties;
       return this;
     }
 
-    public Builder withHeaders(JmsHeaders headers){
+    public Builder withHeaders(JmsHeaders headers) {
       this.headers = headers;
       return this;
     }
 
-    public Builder withAckId(String ackId){
+    public Builder withAckId(String ackId) {
       this.ackId = ackId;
       return this;
     }
 
-    public JmsAttributes build(){
+    public JmsAttributes build() {
       checkArgument(properties != null, "No JmsMessageProperties were provided, but they are required for the JmsAttributes");
       checkArgument(headers != null, "No JmsHeaders were provided, but they are required for the JmsAttributes");
       return new DefaultJmsAttributes(properties, headers, ackId);
