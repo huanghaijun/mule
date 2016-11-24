@@ -6,11 +6,16 @@
  */
 package org.mule.runtime.module.extension.internal.introspection.validation;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptySet;
+import static org.mockito.Answers.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.when;
+import static org.mule.runtime.module.extension.internal.util.IntrospectionUtils.getField;
+import static org.mule.test.module.extension.internal.util.ExtensionsTestUtils.arrayOf;
+import static org.mule.test.module.extension.internal.util.ExtensionsTestUtils.dictionaryOf;
+import static org.mule.test.module.extension.internal.util.ExtensionsTestUtils.mockSubTypes;
+import static org.mule.test.module.extension.internal.util.ExtensionsTestUtils.objectTypeBuilder;
+import static org.mule.test.module.extension.internal.util.ExtensionsTestUtils.toMetadataType;
 import org.mule.runtime.api.meta.model.ElementDslModel;
 import org.mule.runtime.api.meta.model.ExtensionModel;
 import org.mule.runtime.api.meta.model.operation.OperationModel;
@@ -28,16 +33,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptySet;
-import static org.mockito.Answers.RETURNS_DEEP_STUBS;
-import static org.mockito.Mockito.when;
-import static org.mule.runtime.module.extension.internal.util.IntrospectionUtils.getField;
-import static org.mule.test.module.extension.internal.util.ExtensionsTestUtils.arrayOf;
-import static org.mule.test.module.extension.internal.util.ExtensionsTestUtils.dictionaryOf;
-import static org.mule.test.module.extension.internal.util.ExtensionsTestUtils.mockSubTypes;
-import static org.mule.test.module.extension.internal.util.ExtensionsTestUtils.objectTypeBuilder;
-import static org.mule.test.module.extension.internal.util.ExtensionsTestUtils.toMetadataType;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 
 @SmallTest
 @RunWith(MockitoJUnitRunner.class)
@@ -158,6 +158,14 @@ public class ParameterModelValidatorTestCase extends AbstractMuleTestCase {
         .thenReturn(Optional.of(new ParameterGroupModelProperty(asList(child))));
     when(invalidParameterModel.getType()).thenReturn(toMetadataType(Serializable.class));
     when(invalidParameterModel.getName()).thenReturn(nonInstantiableField);
+    when(operationModel.getParameterModels()).thenReturn(asList(invalidParameterModel));
+    validator.validate(extensionModel);
+  }
+
+  @Test(expected = IllegalParameterModelDefinitionException.class)
+  public void invalidModelDueToListWithoutPluralName() {
+    when(invalidParameterModel.getType()).thenReturn(toMetadataType(List.class));
+    when(invalidParameterModel.getName()).thenReturn("thing");
     when(operationModel.getParameterModels()).thenReturn(asList(invalidParameterModel));
     validator.validate(extensionModel);
   }

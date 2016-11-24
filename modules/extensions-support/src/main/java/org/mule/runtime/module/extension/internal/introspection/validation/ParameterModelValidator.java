@@ -6,6 +6,17 @@
  */
 package org.mule.runtime.module.extension.internal.introspection.validation;
 
+import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
+import static org.mule.metadata.java.api.utils.JavaTypeUtils.getType;
+import static org.mule.runtime.api.meta.model.parameter.ParameterModel.RESERVED_NAMES;
+import static org.mule.runtime.extension.api.util.NameUtils.getTopLevelTypeName;
+import static org.mule.runtime.extension.api.util.NameUtils.hyphenize;
+import static org.mule.runtime.extension.api.util.NameUtils.singularize;
+import static org.mule.runtime.extension.xml.dsl.api.XmlModelUtils.supportsTopLevelDeclaration;
+import static org.mule.runtime.module.extension.internal.util.ExtensionMetadataTypeUtils.getId;
+import static org.mule.runtime.module.extension.internal.util.IntrospectionUtils.getComponentModelTypeName;
+import static org.mule.runtime.module.extension.internal.util.IntrospectionUtils.isInstantiable;
 import org.mule.metadata.api.model.ArrayType;
 import org.mule.metadata.api.model.DictionaryType;
 import org.mule.metadata.api.model.MetadataType;
@@ -19,10 +30,10 @@ import org.mule.runtime.api.meta.model.operation.OperationModel;
 import org.mule.runtime.api.meta.model.parameter.ParameterModel;
 import org.mule.runtime.api.meta.model.parameter.ParameterizedModel;
 import org.mule.runtime.api.meta.model.util.ExtensionWalker;
-import org.mule.runtime.extension.api.exception.IllegalModelDefinitionException;
 import org.mule.runtime.extension.api.declaration.type.annotation.XmlHintsAnnotation;
-import org.mule.runtime.extension.api.util.SubTypesMappingContainer;
+import org.mule.runtime.extension.api.exception.IllegalModelDefinitionException;
 import org.mule.runtime.extension.api.exception.IllegalParameterModelDefinitionException;
+import org.mule.runtime.extension.api.util.SubTypesMappingContainer;
 import org.mule.runtime.module.extension.internal.model.property.ParameterGroupModelProperty;
 import org.mule.runtime.module.extension.internal.util.ExtensionMetadataTypeUtils;
 
@@ -31,23 +42,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import static java.lang.String.format;
-import static java.util.stream.Collectors.toList;
-import static org.mule.metadata.java.api.utils.JavaTypeUtils.getType;
-import static org.mule.runtime.api.meta.model.parameter.ParameterModel.RESERVED_NAMES;
-import static org.mule.runtime.extension.api.util.NameUtils.getTopLevelTypeName;
-import static org.mule.runtime.extension.api.util.NameUtils.hyphenize;
-import static org.mule.runtime.extension.xml.dsl.api.XmlModelUtils.supportsTopLevelDeclaration;
-import static org.mule.runtime.module.extension.internal.util.IntrospectionUtils.getComponentModelTypeName;
-import static org.mule.runtime.module.extension.internal.util.IntrospectionUtils.isInstantiable;
-import static org.mule.runtime.module.extension.internal.util.ExtensionMetadataTypeUtils.getId;
-
 /**
  * Validates that all {@link ParameterModel parameters} provided by the {@link ConfigurationModel configurations},
  * {@link ConnectionProviderModel connection providers} and {@link OperationModel operations} from the {@link ExtensionModel
  * extension} complies with:
  * <ul>
  * <li>The name must not be one of the reserved ones</li>
+ * <li>If the parameter is a {@link ArrayType} the name should be plural</li>
  * <li>The {@link MetadataType metadataType} must be provided</li>
  * <li>If required, cannot provide a default value</li>
  * <li>The {@link Class} of the parameter must be valid too, that implies that the class shouldn't contain any field with a
@@ -141,7 +142,24 @@ public final class ParameterModelValidator implements ModelValidator {
     if ((supportsGlobalReferences(parameterModel) && supportsGlobalReferences(parameterModel.getType())) ||
         supportsInlineDefinition(parameterModel)) {
       parameterModel.getType().accept(visitor);
+      validateParameterIsPlural(parameterModel, ownerModelType, ownerName, extensionName);
     }
+  }
+
+  private void validateParameterIsPlural(final ParameterModel parameterModel, String ownerModelType, String ownerName,
+                                         String extensionName) {
+    parameterModel.getType().accept(new MetadataTypeVisitor() {
+
+      @Override
+      public void visitArrayType(ArrayType arrayType) {
+        if (parameterModel.getName().equals(singularize(parameterModel.getName()))) {
+
+          throw new IllegalParameterModelDefinitionException(format("The parameter '%s' in the %s [%s] from the extension [%s] is a collection and its name should be plural",
+                                                                    parameterModel.getName(), ownerModelType, ownerName,
+                                                                    extensionName));
+        }
+      }
+    });
   }
 
   private void validateNameCollisionWithTypes(ParameterModel parameterModel, String ownerName, String ownerModelType,
