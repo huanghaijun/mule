@@ -38,8 +38,10 @@ import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.api.lifecycle.Lifecycle;
 import org.mule.runtime.api.message.ErrorType;
+import org.mule.runtime.core.DefaultEventContext;
 import org.mule.runtime.core.MessageExchangePattern;
 import org.mule.runtime.core.api.Event;
+import org.mule.runtime.core.api.EventContext;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.MuleSession;
 import org.mule.runtime.core.api.config.MuleConfiguration;
@@ -52,7 +54,7 @@ import org.mule.runtime.core.api.processor.MessageProcessorBuilder;
 import org.mule.runtime.core.api.processor.MessageProcessorChain;
 import org.mule.runtime.core.api.processor.NonBlockingMessageProcessor;
 import org.mule.runtime.core.api.processor.Processor;
-import org.mule.runtime.core.api.registry.RegistrationException;
+import org.mule.runtime.core.api.processor.strategy.ProcessingStrategyFactory;
 import org.mule.runtime.core.construct.Flow;
 import org.mule.runtime.core.context.notification.DefaultFlowCallStack;
 import org.mule.runtime.core.exception.ErrorTypeLocator;
@@ -60,6 +62,7 @@ import org.mule.runtime.core.exception.MessagingException;
 import org.mule.runtime.core.processor.AbstractInterceptingMessageProcessor;
 import org.mule.runtime.core.processor.ResponseMessageProcessorAdapter;
 import org.mule.runtime.core.processor.strategy.DefaultFlowProcessingStrategyFactory;
+import org.mule.runtime.core.processor.strategy.LegacyAsynchronousProcessingStrategyFactory;
 import org.mule.runtime.core.processor.strategy.LegacyNonBlockingProcessingStrategyFactory;
 import org.mule.runtime.core.routing.ChoiceRouter;
 import org.mule.runtime.core.routing.ScatterGatherRouter;
@@ -78,7 +81,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.mockito.Mockito;
@@ -95,26 +100,48 @@ public class DefaultMessageProcessorChainTestCase extends AbstractMuleContextTes
   protected boolean nonBlocking;
   protected boolean synchronous;
   private AtomicInteger nonBlockingProcessorsExecuted = new AtomicInteger(0);
+  private ProcessingStrategyFactory processingStrategyFactory;
+
+  @Rule
+  public ExpectedException expectedException = ExpectedException.none();
 
   @Parameterized.Parameters
   public static Collection<Object[]> parameters() {
     return Arrays.asList(new Object[][] {
-        {REQUEST_RESPONSE, false, true},
-        {REQUEST_RESPONSE, false, false},
-        {REQUEST_RESPONSE, true, true},
-        {REQUEST_RESPONSE, true, false},
-        {ONE_WAY, false, true},
-        {ONE_WAY, false, false},
-        {ONE_WAY, true, true},
-        {ONE_WAY, true, false}});
+        {REQUEST_RESPONSE, false, true, new DefaultFlowProcessingStrategyFactory()},
+        {REQUEST_RESPONSE, true, true, new DefaultFlowProcessingStrategyFactory()},
+        {REQUEST_RESPONSE, false, false, new DefaultFlowProcessingStrategyFactory()},
+        {REQUEST_RESPONSE, true, false, new DefaultFlowProcessingStrategyFactory()},
+        {REQUEST_RESPONSE, false, true, new LegacyNonBlockingProcessingStrategyFactory()},
+        {REQUEST_RESPONSE, true, true, new LegacyNonBlockingProcessingStrategyFactory()},
+        {REQUEST_RESPONSE, false, false, new LegacyNonBlockingProcessingStrategyFactory()},
+        {REQUEST_RESPONSE, true, false, new LegacyNonBlockingProcessingStrategyFactory()},
+        {REQUEST_RESPONSE, false, true, new LegacyAsynchronousProcessingStrategyFactory()},
+        {REQUEST_RESPONSE, true, true, new LegacyAsynchronousProcessingStrategyFactory()},
+        {REQUEST_RESPONSE, false, false, new LegacyAsynchronousProcessingStrategyFactory()},
+        {REQUEST_RESPONSE, true, false, new LegacyAsynchronousProcessingStrategyFactory()},
+        {ONE_WAY, false, true, new DefaultFlowProcessingStrategyFactory()},
+        {ONE_WAY, true, true, new DefaultFlowProcessingStrategyFactory()},
+        {ONE_WAY, false, false, new DefaultFlowProcessingStrategyFactory()},
+        {ONE_WAY, true, false, new DefaultFlowProcessingStrategyFactory()},
+        {ONE_WAY, false, true, new LegacyNonBlockingProcessingStrategyFactory()},
+        {ONE_WAY, true, true, new LegacyNonBlockingProcessingStrategyFactory()},
+        {ONE_WAY, false, false, new LegacyNonBlockingProcessingStrategyFactory()},
+        {ONE_WAY, true, false, new LegacyNonBlockingProcessingStrategyFactory()},
+        {ONE_WAY, false, true, new LegacyAsynchronousProcessingStrategyFactory()},
+        {ONE_WAY, true, true, new LegacyAsynchronousProcessingStrategyFactory()},
+        {ONE_WAY, false, false, new LegacyAsynchronousProcessingStrategyFactory()},
+        {ONE_WAY, true, false, new LegacyAsynchronousProcessingStrategyFactory()}});
   }
 
-  private Flow mockFlow = mock(Flow.class);
+  private Flow flow;
 
-  public DefaultMessageProcessorChainTestCase(MessageExchangePattern exchangePattern, boolean nonBlocking, boolean synchronous) {
+  public DefaultMessageProcessorChainTestCase(MessageExchangePattern exchangePattern, boolean nonBlocking, boolean synchronous,
+                                              ProcessingStrategyFactory processingStrategyFactory) {
     this.exchangePattern = exchangePattern;
     this.nonBlocking = nonBlocking;
     this.synchronous = synchronous;
+    this.processingStrategyFactory = processingStrategyFactory;
   }
 
   @Before
@@ -132,18 +159,17 @@ public class DefaultMessageProcessorChainTestCase extends AbstractMuleContextTes
     when(muleContext.getErrorTypeLocator()).thenReturn(errorTypeLocator);
     when(muleContext.getExceptionContextProviders()).thenReturn(singletonList(exceptionContextProvider));
     when(errorTypeLocator.lookupErrorType(any())).thenReturn(errorType);
-    mockFlow = new Flow("flow", muleContext);
-    mockFlow.setProcessingStrategyFactory(nonBlocking ? new LegacyNonBlockingProcessingStrategyFactory()
-        : new DefaultFlowProcessingStrategyFactory());
-    mockFlow.initialise();
-    mockFlow.start();
+    flow = new Flow("flow", muleContext);
+    flow.setProcessingStrategyFactory(processingStrategyFactory);
+    flow.initialise();
+    flow.start();
   }
 
   @After
-  public void after() throws RegistrationException, MuleException {
+  public void after() throws MuleException {
     stopIfNeeded(muleContext.getSchedulerService());
-    mockFlow.stop();
-    mockFlow.dispose();
+    flow.stop();
+    flow.dispose();
   }
 
   @Test
@@ -464,7 +490,7 @@ public class DefaultMessageProcessorChainTestCase extends AbstractMuleContextTes
             .build();
     nested.setMuleContext(muleContext);
     builder.chain(getAppendingMP("1"), event -> nested.process(Event.builder(event)
-        .message(event.getMessage()).exchangePattern(REQUEST_RESPONSE).flow(mockFlow).build()), getAppendingMP("2"));
+                                                                   .message(event.getMessage()).exchangePattern(REQUEST_RESPONSE).flow(flow).build()), getAppendingMP("2"));
     assertEquals("01ab2", process(builder.build(), getTestEventUsingFlow("0")).getMessage().getPayload().getValue());
   }
 
@@ -709,31 +735,39 @@ public class DefaultMessageProcessorChainTestCase extends AbstractMuleContextTes
     assertThat(process(newChain(choiceRouter), getTestEventUsingFlow("0")).getMessage().getPayload().getValue(), equalTo("01"));
   }
 
-  @Test(expected = MessagingException.class)
+  @Test
   public void testExceptionAfter() throws Exception {
     DefaultMessageProcessorChainBuilder builder = new DefaultMessageProcessorChainBuilder();
     builder.chain(getAppendingMP("1"), new ExceptionThrowingMessageProcessor());
+    expectedException.expect(MessagingException.class);
+    expectedException.expectCause(instanceOf(IllegalStateException.class));
     process(builder.build(), getTestEventUsingFlow("0"));
   }
 
-  @Test(expected = MessagingException.class)
+  @Test
   public void testExceptionBefore() throws Exception {
     DefaultMessageProcessorChainBuilder builder = new DefaultMessageProcessorChainBuilder();
     builder.chain(new ExceptionThrowingMessageProcessor(), getAppendingMP("1"));
+    expectedException.expect(MessagingException.class);
+    expectedException.expectCause(instanceOf(IllegalStateException.class));
     process(builder.build(), getTestEventUsingFlow("0"));
   }
 
-  @Test(expected = MessagingException.class)
+  @Test
   public void testExceptionBetween() throws Exception {
     DefaultMessageProcessorChainBuilder builder = new DefaultMessageProcessorChainBuilder();
     builder.chain(getAppendingMP("1"), new ExceptionThrowingMessageProcessor(), getAppendingMP("2"));
+    expectedException.expect(MessagingException.class);
+    expectedException.expectCause(instanceOf(IllegalStateException.class));
     process(builder.build(), getTestEventUsingFlow("0"));
   }
 
-  @Test(expected = MessagingException.class)
+  @Test
   public void testExceptionInResponse() throws Exception {
     DefaultMessageProcessorChainBuilder builder = new DefaultMessageProcessorChainBuilder();
     builder.chain(new ResponseMessageProcessorAdapter(new ExceptionThrowingMessageProcessor()), getAppendingMP("1"));
+    expectedException.expect(MessagingException.class);
+    expectedException.expectCause(instanceOf(IllegalStateException.class));
     process(builder.build(), getTestEventUsingFlow("0"));
   }
 
@@ -743,7 +777,7 @@ public class DefaultMessageProcessorChainTestCase extends AbstractMuleContextTes
       ((MuleContextAware) messageProcessor).setMuleContext(muleContext);
     }
     if (messageProcessor instanceof FlowConstructAware) {
-      ((FlowConstructAware) messageProcessor).setFlowConstruct(mockFlow);
+      ((FlowConstructAware) messageProcessor).setFlowConstruct(flow);
     }
     try {
       if (nonBlocking) {
@@ -761,10 +795,12 @@ public class DefaultMessageProcessorChainTestCase extends AbstractMuleContextTes
     } finally {
       final SimpleUnitTestSupportSchedulerService schedulerService =
           (SimpleUnitTestSupportSchedulerService) (muleContext.getSchedulerService());
-      new PollingProber().check(new JUnitLambdaProbe(() -> {
-        assertThat(schedulerService.getScheduledTasks(), greaterThanOrEqualTo(nonBlockingProcessorsExecuted.get()));
-        return true;
-      }));
+      if (processingStrategyFactory instanceof LegacyNonBlockingProcessingStrategyFactory.LegacyNonBlockingProcessingStrategy) {
+        new PollingProber().check(new JUnitLambdaProbe(() -> {
+          assertThat(schedulerService.getScheduledTasks(), greaterThanOrEqualTo(nonBlockingProcessorsExecuted.get()));
+          return true;
+        }));
+      }
     }
   }
 
@@ -1027,6 +1063,7 @@ public class DefaultMessageProcessorChainTestCase extends AbstractMuleContextTes
 
   protected Event getTestEventUsingFlow(Object data) {
     Event event = mock(Event.class);
+    EventContext eventContext = DefaultEventContext.create(flow, "");
     InternalMessage message = InternalMessage.builder().payload(data).build();
     when(event.getFlowCallStack()).thenReturn(new DefaultFlowCallStack());
     when(event.getMessage()).thenReturn(message);
@@ -1034,6 +1071,7 @@ public class DefaultMessageProcessorChainTestCase extends AbstractMuleContextTes
     when(event.getSession()).thenReturn(mock(MuleSession.class));
     when(event.isSynchronous()).thenReturn(synchronous);
     when(event.getError()).thenReturn(empty());
+    when(event.getContext()).thenReturn(eventContext);
     return event;
   }
 

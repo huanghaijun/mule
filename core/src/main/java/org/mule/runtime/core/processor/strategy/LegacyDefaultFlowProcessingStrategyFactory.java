@@ -48,19 +48,14 @@ public class LegacyDefaultFlowProcessingStrategyFactory extends LegacyAsynchrono
     }
 
     @Override
-    public Function<Publisher<Event>, Publisher<Event>> onPipeline(FlowConstruct flowConstruct,
-                                                                   Function<Publisher<Event>, Publisher<Event>> pipelineFunction) {
-      return publisher -> from(publisher).concatMap(request -> {
-        if (canProcessAsync(request)) {
-          return just(request).transform(super.onPipeline(flowConstruct, pipelineFunction));
-        } else {
-          return just(request).transform(SYNCHRONOUS_PROCESSING_STRATEGY_INSTANCE.onPipeline(flowConstruct, pipelineFunction));
-        }
-      });
+    protected Consumer<Event> assertCanProcess() {
+      return event -> {
+      };
     }
 
-    protected boolean canProcessAsync(Event event) {
-      return !(event.isSynchronous() || isTransactionActive());
+    @Override
+    protected Supplier<Boolean> shouldSchedule(Scheduler scheduler) {
+      return () -> !isTransactionActive();
     }
   }
 }
