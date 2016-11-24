@@ -13,7 +13,7 @@ import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
 import static org.slf4j.LoggerFactory.getLogger;
 import org.mule.extensions.jms.api.config.AckMode;
 import org.mule.extensions.jms.api.config.JmsConfig;
-import org.mule.extensions.jms.api.config.JmsConsumerProperties;
+import org.mule.extensions.jms.api.config.JmsConsumerConfig;
 import org.mule.extensions.jms.api.connection.JmsConnection;
 import org.mule.extensions.jms.api.connection.JmsSession;
 import org.mule.extensions.jms.api.destination.ConsumerType;
@@ -54,7 +54,7 @@ public final class JmsConsume {
    * Operation that allows the user to consume a single {@link Message} from a given {@link Destination}.
    *
    * @param connection the current {@link JmsConnection}
-   * @param config the current {@link JmsConsumerProperties}
+   * @param config the current {@link JmsConsumerConfig}
    * @param destination the name of the {@link Destination} from where the {@link Message} should be consumed
    * @param consumerType the type of the {@link MessageConsumer} that is required for the given destination, along with any
    *                     extra configurations that are required based on the destination type.
@@ -80,7 +80,7 @@ public final class JmsConsume {
                                                @Optional(defaultValue = "MILLISECONDS") TimeUnit waitTimeUnit)
       throws JmsExtensionException {
 
-    JmsConsumerProperties consumerConfig = config.getConsumerConfig();
+    JmsConsumerConfig consumerConfig = config.getConsumerConfig();
 
     consumerType = resolveOverride(consumerConfig.getConsumerType(), consumerType);
     ackMode = resolveOverride(consumerConfig.getAckMode(), ackMode);

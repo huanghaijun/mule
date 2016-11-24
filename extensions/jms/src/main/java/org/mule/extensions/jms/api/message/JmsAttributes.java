@@ -9,6 +9,8 @@ package org.mule.extensions.jms.api.message;
 import org.mule.extensions.jms.api.config.AckMode;
 import org.mule.runtime.api.message.Attributes;
 
+import java.util.Optional;
+
 import javax.jms.Message;
 
 /**
@@ -33,6 +35,6 @@ public interface JmsAttributes extends Attributes {
   /**
    * @return the session Id required to ACK a {@link Message} that was consumed using {@link AckMode#MANUAL}
    */
-  String getAckId();
+  Optional<String> getAckId();
 
 }

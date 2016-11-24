@@ -30,10 +30,10 @@ public class JmsActiveMQQueueBridgeTestCase extends JmsAbstractQueueBridge {
   @Parameterized.Parameters(name = "{0}")
   public static Collection<Object[]> data() {
     return asList(new Object[][] {
-        {"activemq-default", "config/activemq/activemq-default.xml"},
+        //{"activemq-default", "config/activemq/activemq-default.xml"},
         {"activemq-default-no-caching", "config/activemq/activemq-default-no-caching.xml"},
-        {"activemq-default-user-pass", "config/activemq/activemq-default-user-pass.xml"},
-        {"activemq-with-overrides", "config/activemq/activemq-with-overrides.xml"}
+        //{"activemq-default-user-pass", "config/activemq/activemq-default-user-pass.xml"},
+        //{"activemq-with-overrides", "config/activemq/activemq-with-overrides.xml"}
     });
   }
 

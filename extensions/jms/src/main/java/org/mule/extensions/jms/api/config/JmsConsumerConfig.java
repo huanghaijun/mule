@@ -24,7 +24,7 @@ import javax.jms.Message;
  * @since 4.0
  */
 @XmlHints(allowTopLevelDefinition = true)
-public class JmsConsumerProperties {
+public class JmsConsumerConfig {
 
   /**
    * The {@link AckMode} to use when consuming a {@link Message}

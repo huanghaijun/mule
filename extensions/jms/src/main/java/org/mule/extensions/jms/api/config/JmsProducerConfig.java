@@ -28,7 +28,7 @@ import javax.jms.Message;
  * @since 4.0
  */
 @XmlHints(allowTopLevelDefinition = true)
-public class JmsProducerProperties {
+public class JmsProducerConfig {
 
   /**
    * Sets the default value for the {@link Message#getJMSDeliveryMode}.

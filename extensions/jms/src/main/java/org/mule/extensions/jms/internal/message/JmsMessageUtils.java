@@ -7,7 +7,10 @@
 package org.mule.extensions.jms.internal.message;
 
 
+import static java.lang.Character.isJavaIdentifierPart;
 import static java.lang.String.format;
+import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.mule.runtime.api.util.Preconditions.checkArgument;
 import org.mule.extensions.jms.api.connection.JmsSpecification;
 import org.mule.runtime.core.message.OutputHandler;
 
@@ -15,7 +18,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -111,16 +113,14 @@ public class JmsMessageUtils {
    * @param name the String to encode
    * @return a valid JMS header name
    */
-  public static String encodeHeader(String name) {
+  public static String encodeKey(String name) {
     // check against JMS 1.1 spec, sections 3.5.1 (3.8.1.1)
     boolean nonCompliant = false;
 
-    if (name == null || name.trim().equals("")) {
-      throw new IllegalArgumentException("Header name to encode must not be null or empty");
-    }
+    checkArgument(!isBlank(name), "Header name to encode cannot be blank");
 
     int i = 0, length = name.length();
-    while (i < length && Character.isJavaIdentifierPart(name.charAt(i))) {
+    while (i < length && isJavaIdentifierPart(name.charAt(i))) {
       // zip through
       i++;
     }
@@ -132,20 +132,16 @@ public class JmsMessageUtils {
       // make a copy, fix up remaining characters
       StringBuilder sb = new StringBuilder(name);
       for (int j = i; j < length; j++) {
-        if (!Character.isJavaIdentifierPart(sb.charAt(j))) {
+        if (!isJavaIdentifierPart(sb.charAt(j))) {
           sb.setCharAt(j, REPLACEMENT_CHAR);
           nonCompliant = true;
         }
       }
 
       if (nonCompliant) {
-        LOGGER.warn(MessageFormat.format(
-                                         "Header: {0} is not compliant with JMS specification (sec. 3.5.1, 3.8.1.1). It will cause "
-                                             +
-                                             "problems in your and other applications. Please update your application code to correct this. "
-                                             +
-                                             "Mule renamed it to {1}",
-                                         name, sb.toString()));
+        LOGGER.warn(format("Header: %s is not compliant with JMS specification (sec. 3.5.1, 3.8.1.1). It will cause "
+                             + "problems in other applications. Please update your application code to correct this. "
+                             +"Mule renamed it to %s",name, sb.toString()));
       }
 
       return sb.toString();

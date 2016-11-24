@@ -268,16 +268,16 @@
             <!--TODO(gfernandes): remove this, see validation's comment-->
             <exclusions>
                 <exclusion>
-                    <groupId>org.apache.cxf</groupId>
-                    <artifactId>cxf-rt-core</artifactId>
+                    <groupId>org.springframework</groupId>
+                    <artifactId>spring-jms</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>org.apache.cxf</groupId>
-                    <artifactId>cxf-rt-frontend-simple</artifactId>
+                    <groupId>org.apache.activemq</groupId>
+                    <artifactId>activemq-broker</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>org.mule</groupId>
-                    <artifactId>mule-metadata-model-xml</artifactId>
+                    <groupId>org.apache.activemq</groupId>
+                    <artifactId>activemq-client</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>com.google.guava</groupId>
@@ -287,10 +287,13 @@
                     <groupId>commons-lang</groupId>
                     <artifactId>commons-lang</artifactId>
                 </exclusion>
-                <!--TODO remove MULE-10783-->
                 <exclusion>
-                    <groupId>com.squareup.okhttp</groupId>
-                    <artifactId>okhttp</artifactId>
+                    <groupId>org.apache.activemq</groupId>
+                    <artifactId>activemq-kahadb-store</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>commons-io</groupId>
+                    <artifactId>commons-io</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>

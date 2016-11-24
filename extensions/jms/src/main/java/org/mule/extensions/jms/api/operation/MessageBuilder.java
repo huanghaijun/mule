@@ -11,10 +11,10 @@ import static java.lang.String.format;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.mule.extensions.jms.api.operation.JmsOperationCommons.resolveOverride;
 import static org.mule.extensions.jms.internal.message.JMSXDefinedPropertiesNames.JMSX_NAMES;
-import static org.mule.extensions.jms.internal.message.JmsMessageUtils.encodeHeader;
+import static org.mule.extensions.jms.internal.message.JmsMessageUtils.encodeKey;
 import static org.mule.extensions.jms.internal.message.JmsMessageUtils.toMessage;
 import org.mule.extensions.jms.api.config.JmsConfig;
-import org.mule.extensions.jms.api.config.JmsProducerProperties;
+import org.mule.extensions.jms.api.config.JmsProducerConfig;
 import org.mule.extensions.jms.api.destination.JmsDestination;
 import org.mule.extensions.jms.api.exception.DestinationNotFoundException;
 import org.mule.extensions.jms.api.message.JmsxProperties;
@@ -50,12 +50,12 @@ public class MessageBuilder {
   private static final String CONTENT_TYPE_JMS_PROPERTY = "MM_MESSAGE_CONTENT_TYPE";
 
   /**
-   * the content of the {@link Message}
+   * the body of the {@link Message}
    */
   @Parameter
   @XmlHints(allowReferences = false)
   @Content(primary = true)
-  private Object content;
+  private Object body;
 
   /**
    * the JMSType header of the {@link Message}
@@ -74,14 +74,14 @@ public class MessageBuilder {
   private String correlationId;
 
   /**
-   * {@code true} if the content type should be sent as a {@link Message} property
+   * {@code true} if the body type should be sent as a {@link Message} property
    */
   @Parameter
   @Optional(defaultValue = "true")
   private boolean sendContentType;
 
   /**
-   * the content type of the {@code content}
+   * the body type of the {@code body}
    */
   @Parameter
   @Optional(defaultValue = "text/plain")
@@ -120,7 +120,7 @@ public class MessageBuilder {
    * Creates a {@link Message} based on the provided configurations
    * @param jmsSupport the {@link JmsSupport} used to create the JMSReplyTo {@link Destination}
    * @param session the current {@link Session}
-   * @param config the current {@link JmsProducerProperties}
+   * @param config the current {@link JmsProducerConfig}
    * @return the {@link Message} created by the user
    * @throws JMSException if an error occurs
    */
@@ -129,7 +129,7 @@ public class MessageBuilder {
 
     config.getEncoding();
 
-    Message message = toMessage(content, session);
+    Message message = toMessage(body, session);
 
     setJmsCorrelationIdHeader(message);
     setJmsTypeHeader(config.getProducerConfig(), message);
@@ -185,7 +185,7 @@ public class MessageBuilder {
   private void setJmsPropertySanitizeKeyIfNecessary(Message msg, String key, Object value) {
     try {
       // sanitize key as JMS Property Name
-      key = encodeHeader(key);
+      key = encodeKey(key);
       msg.setObjectProperty(key, value);
     } catch (JMSException e) {
       // Various JMS servers have slightly different rules to what
@@ -198,7 +198,7 @@ public class MessageBuilder {
   }
 
 
-  private void setJmsTypeHeader(JmsProducerProperties config, Message message) {
+  private void setJmsTypeHeader(JmsProducerConfig config, Message message) {
     try {
       String type = resolveOverride(config.getJmsType(), jmsType);
       if (!isBlank(type)) {
@@ -219,8 +219,8 @@ public class MessageBuilder {
     }
   }
 
-  public Object getContent() {
-    return content;
+  public Object getBody() {
+    return body;
   }
 
   public boolean isSendContentType() {

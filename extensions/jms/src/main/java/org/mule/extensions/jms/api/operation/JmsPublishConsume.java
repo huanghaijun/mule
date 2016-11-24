@@ -16,7 +16,7 @@ import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
 import static org.slf4j.LoggerFactory.getLogger;
 import org.mule.extensions.jms.api.config.AckMode;
 import org.mule.extensions.jms.api.config.JmsConfig;
-import org.mule.extensions.jms.api.config.JmsProducerProperties;
+import org.mule.extensions.jms.api.config.JmsProducerConfig;
 import org.mule.extensions.jms.api.connection.JmsConnection;
 import org.mule.extensions.jms.api.connection.JmsSession;
 import org.mule.extensions.jms.api.destination.ConsumerType;
@@ -64,7 +64,7 @@ public class JmsPublishConsume {
    * Operation that allows the user to send a message to a JMS {@link Destination} and waits for a response
    * either to the provided {@code ReplyTo} destination or to a temporary {@link Destination} created dynamically
    *
-   * @param config             the current {@link JmsProducerProperties}
+   * @param config             the current {@link JmsProducerConfig}
    * @param connection         the current {@link JmsConnection}
    * @param destination        the name of the {@link Destination} where the {@link Message} should be sent
    * @param messageBuilder     the {@link MessageBuilder} used to create the {@link Message} to be sent
@@ -98,7 +98,7 @@ public class JmsPublishConsume {
                                                       @Optional @Summary("Time unit to be used in the deliveryDelay configurations") TimeUnit deliveryDelayUnit)
       throws JmsExtensionException {
 
-    JmsProducerProperties producerConfig = config.getProducerConfig();
+    JmsProducerConfig producerConfig = config.getProducerConfig();
     java.util.Optional<Long> delay = resolveDeliveryDelay(connection.getJmsSupport().getSpecification(),
                                                           producerConfig, deliveryDelay, deliveryDelayUnit);
     persistentDelivery = resolveOverride(producerConfig.isPersistentDelivery(), persistentDelivery);
@@ -179,7 +179,7 @@ public class JmsPublishConsume {
     }
   }
 
-  private MessageProducer createProducer(JmsConnection connection, JmsProducerProperties config, boolean isTopic,
+  private MessageProducer createProducer(JmsConnection connection, JmsProducerConfig config, boolean isTopic,
                                          Session session, java.util.Optional<Long> deliveryDelay,
                                          Destination jmsDestination, Logger logger)
       throws JMSException {

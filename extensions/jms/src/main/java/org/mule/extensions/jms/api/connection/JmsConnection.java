@@ -86,7 +86,7 @@ public final class JmsConnection implements Stoppable, Disposable {
       return new JmsSession(session, ackId);
     }
 
-    return new JmsSession(session, "");
+    return new JmsSession(session);
   }
 
   /**

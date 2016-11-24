@@ -6,6 +6,10 @@
  */
 package org.mule.extensions.jms.api.connection;
 
+import static java.util.Optional.ofNullable;
+
+import java.util.Optional;
+
 import javax.jms.Session;
 
 /**
@@ -17,7 +21,11 @@ import javax.jms.Session;
 public final class JmsSession {
 
   private final Session session;
-  private final String ackId;
+  private String ackId;
+
+  public JmsSession(Session session) {
+    this.session = session;
+  }
 
   public JmsSession(Session session, String ackId) {
     this.session = session;
@@ -32,9 +40,9 @@ public final class JmsSession {
   }
 
   /**
-   * @return the AckID of this {@link Session}
+   * @return the AckId of this {@link Session} or {@link Optional#empty} if no AckId is required
    */
-  public String getAckId() {
-    return ackId;
+  public Optional<String> getAckId() {
+    return ofNullable(ackId);
   }
 }

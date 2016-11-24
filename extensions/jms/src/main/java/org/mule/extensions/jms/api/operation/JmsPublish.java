@@ -13,7 +13,7 @@ import static org.mule.extensions.jms.api.operation.JmsOperationCommons.resolveO
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
 import static org.slf4j.LoggerFactory.getLogger;
 import org.mule.extensions.jms.api.config.JmsConfig;
-import org.mule.extensions.jms.api.config.JmsProducerProperties;
+import org.mule.extensions.jms.api.config.JmsProducerConfig;
 import org.mule.extensions.jms.api.connection.JmsConnection;
 import org.mule.extensions.jms.api.connection.JmsSession;
 import org.mule.extensions.jms.api.destination.DestinationType;
@@ -50,7 +50,7 @@ public final class JmsPublish {
   /**
    * Operation that allows the user to send a {@link Message} to a JMS {@link Destination
    *
-   * @param config             the current {@link JmsProducerProperties }
+   * @param config             the current {@link JmsProducerConfig }
    * @param connection         the current {@link JmsConnection}
    * @param destination        the name of the {@link Destination} where the {@link Message} should be sent
    * @param type               the {@link DestinationType} of the {@code destination}
@@ -77,7 +77,7 @@ public final class JmsPublish {
                       @Optional @Summary("Time unit to be used in the deliveryDelay configurations") TimeUnit deliveryDelayUnit)
       throws JmsExtensionException {
 
-    JmsProducerProperties producerConfig = config.getProducerConfig();
+    JmsProducerConfig producerConfig = config.getProducerConfig();
 
     java.util.Optional<Long> delay = resolveDeliveryDelay(connection.getJmsSupport().getSpecification(),
                                                           producerConfig, deliveryDelay, deliveryDelayUnit);
@@ -111,7 +111,7 @@ public final class JmsPublish {
     }
   }
 
-  private MessageProducer createProducer(JmsConnection connection, JmsProducerProperties config, boolean isTopic,
+  private MessageProducer createProducer(JmsConnection connection, JmsProducerConfig config, boolean isTopic,
                                          Session session, java.util.Optional<Long> deliveryDelay,
                                          Destination jmsDestination, Logger logger)
       throws JMSException {

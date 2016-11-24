@@ -108,7 +108,7 @@ public class MuleExpressionLanguage implements ExtendedExpressionLanguage {
   private BindingContext.Builder addFlowBindings(FlowConstruct flow, BindingContext.Builder contextBuilder) {
     if (flow != null) {
       contextBuilder.addBinding(FLOW, new DefaultTypedValue(new FlowVariablesAccessor(flow.getName()),
-                                                            fromType(FlowVariablesAccessor.class)));
+                                                            fromType(FlowVariab lesAccessor.class)));
     }
     return contextBuilder;
   }

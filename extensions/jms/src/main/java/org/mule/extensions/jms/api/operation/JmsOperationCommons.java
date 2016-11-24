@@ -14,12 +14,10 @@ import static org.mule.extensions.jms.api.config.AckMode.NONE;
 import static org.mule.extensions.jms.api.connection.JmsSpecification.JMS_2_0;
 import static org.mule.runtime.api.util.Preconditions.checkArgument;
 import org.mule.extensions.jms.api.config.AckMode;
-import org.mule.extensions.jms.api.config.JmsProducerProperties;
+import org.mule.extensions.jms.api.config.JmsProducerConfig;
 import org.mule.extensions.jms.api.connection.JmsConnection;
 import org.mule.extensions.jms.api.connection.JmsSession;
 import org.mule.extensions.jms.api.connection.JmsSpecification;
-import org.mule.runtime.extension.api.annotation.param.Connection;
-import org.mule.runtime.extension.api.annotation.param.Optional;
 
 import java.util.concurrent.TimeUnit;
 
@@ -35,7 +33,7 @@ import org.slf4j.Logger;
  */
 final class JmsOperationCommons {
 
-  static java.util.Optional<Long> resolveDeliveryDelay(JmsSpecification specification, JmsProducerProperties config,
+  static java.util.Optional<Long> resolveDeliveryDelay(JmsSpecification specification, JmsProducerConfig config,
                                                        Long deliveryDelay, TimeUnit unit) {
     Long delay = resolveOverride(config.getDeliveryDelay(), deliveryDelay);
     TimeUnit delayUnit = resolveOverride(config.getDeliveryDelayUnit(), unit);
@@ -53,7 +51,7 @@ final class JmsOperationCommons {
     return operationValue == null ? configValue : operationValue;
   }
 
-  static void evaluateMessageAck(@Connection JmsConnection connection, @Optional AckMode ackMode, JmsSession session,
+  static void evaluateMessageAck(JmsConnection connection, AckMode ackMode, JmsSession session,
                                  Message received, Logger LOGGER)
       throws JMSException {
     if (ackMode.equals(NONE)) {
@@ -66,7 +64,9 @@ final class JmsOperationCommons {
       if (LOGGER.isDebugEnabled()) {
         LOGGER.debug("Registering pending ACK on session: " + session.getAckId());
       }
-      connection.registerMessageForAck(session.getAckId(), received);
+      String id = session.getAckId().orElseThrow(() -> new IllegalArgumentException("An AckId is required when MANUAL AckMode is set"));
+
+      connection.registerMessageForAck(id, received);
     }
   }
 }

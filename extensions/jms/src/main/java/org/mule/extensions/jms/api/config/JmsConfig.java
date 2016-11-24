@@ -14,7 +14,6 @@ import org.mule.extensions.jms.api.operation.JmsPublishConsume;
 import org.mule.runtime.api.lifecycle.Initialisable;
 import org.mule.runtime.api.lifecycle.InitialisationException;
 import org.mule.runtime.core.api.MuleContext;
-import org.mule.runtime.extension.api.annotation.Alias;
 import org.mule.runtime.extension.api.annotation.Configuration;
 import org.mule.runtime.extension.api.annotation.Operations;
 import org.mule.runtime.extension.api.annotation.param.NullSafe;
@@ -63,8 +62,7 @@ public class JmsConfig implements Initialisable {
   @Parameter
   @Optional
   @NullSafe
-  @Alias("consumer-properties")
-  private JmsConsumerProperties consumerConfig;
+  private JmsConsumerConfig consumerConfig;
 
   /**
    * Configuration parameters for sending messages to a JMS Queue or Topic
@@ -72,8 +70,7 @@ public class JmsConfig implements Initialisable {
   @Parameter
   @Optional
   @NullSafe
-  @Alias("producer-properties")
-  private JmsProducerProperties producerConfig;
+  private JmsProducerConfig producerConfig;
 
 
   public String getContentType() {
@@ -84,11 +81,11 @@ public class JmsConfig implements Initialisable {
     return encoding;
   }
 
-  public JmsConsumerProperties getConsumerConfig() {
+  public JmsConsumerConfig getConsumerConfig() {
     return consumerConfig;
   }
 
-  public JmsProducerProperties getProducerConfig() {
+  public JmsProducerConfig getProducerConfig() {
     return producerConfig;
   }
 }

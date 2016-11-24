@@ -27,7 +27,7 @@ public interface JmsHeaders {
    * @return the delivery mode specified when the message was sent, which
    * can be either {@link DeliveryMode#PERSISTENT} or {@link DeliveryMode#NON_PERSISTENT}
    */
-  int getJMSDeliveryMode();
+  Integer getJMSDeliveryMode();
 
   /**
    * JMS provider calculates its expiration time by adding the {@code timeToLive}
@@ -39,7 +39,7 @@ public interface JmsHeaders {
    *
    * @return the message's expiration time or {@code zero} if the message does not expire
    */
-  long getJMSExpiration();
+  Long getJMSExpiration();
 
   /**
    * Present only in JMS 2.0 Messages
@@ -53,7 +53,7 @@ public interface JmsHeaders {
    *
    * @return the message's delivery time or {@code zero} if no {@code deliveryDelay} was set
    */
-  long getJMSDeliveryTime();
+  Long getJMSDeliveryTime();
 
   /**
    * JMS defines a ten level priority value with 0 as the lowest priority and 9 as the highest.
@@ -65,7 +65,7 @@ public interface JmsHeaders {
    *
    * @return the message priority level.
    */
-  int getJMSPriority();
+  Integer getJMSPriority();
 
   /**
    * @return a value that uniquely identifies each message sent by a provider.
@@ -82,7 +82,7 @@ public interface JmsHeaders {
    * If the Producer was hinted to {@code disableMessageTimestamp}, then {@code zero}
    * is returned.
    */
-  long getJMSTimestamp();
+  Long getJMSTimestamp();
 
   /**
    * Used to link one message with another. A typical use is to link a response
@@ -111,6 +111,6 @@ public interface JmsHeaders {
    *
    * @return {@code true} if the message may have been delivered in the past
    */
-  boolean getJMSRedelivered();
+  Boolean getJMSRedelivered();
 
 }

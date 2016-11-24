@@ -9,6 +9,7 @@ package org.mule.extensions.jms.internal.message;
 
 import static com.google.common.collect.ImmutableMap.copyOf;
 import static org.mule.extensions.jms.internal.message.JMSXDefinedPropertiesNames.JMSX_NAMES;
+import static org.mule.runtime.api.util.Preconditions.checkArgument;
 import org.mule.extensions.jms.api.message.JmsMessageProperties;
 import org.mule.extensions.jms.api.message.JmsxProperties;
 
@@ -29,6 +30,8 @@ public class DefaultJmsProperties implements JmsMessageProperties {
   private JmsxProperties jmsxProperties;
 
   public DefaultJmsProperties(Map<String, Object> messageProperties) {
+    checkArgument(messageProperties != null, "Initializer properties Map expected, but it was null");
+
     allPropertiesMap = copyOf(messageProperties);
     JmsxPropertiesBuilder jmsxPropertiesBuilder = JmsxPropertiesBuilder.create();
 

@@ -9,6 +9,7 @@ package org.mule.extensions.jms.internal.message;
 
 import static java.lang.String.format;
 import static java.nio.charset.Charset.forName;
+import static org.mule.extensions.jms.api.connection.JmsSpecification.JMS_2_0;
 import static org.mule.extensions.jms.api.destination.DestinationType.QUEUE;
 import static org.mule.extensions.jms.api.destination.DestinationType.TOPIC;
 import static org.mule.extensions.jms.internal.message.JmsMessageUtils.getPropertiesMap;
@@ -24,6 +25,7 @@ import org.mule.runtime.api.metadata.MediaType;
 import org.mule.runtime.extension.api.runtime.operation.Result;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -58,7 +60,7 @@ public class JmsResultFactory {
    * @throws JMSException
    */
   public Result<Object, JmsAttributes> createResult(Message jmsMessage, JmsSpecification specification, String contentType,
-                                                    String encoding, String ackId)
+                                                    String encoding, Optional<String> ackId)
       throws IOException, JMSException {
 
     if (jmsMessage == null) {
@@ -69,20 +71,30 @@ public class JmsResultFactory {
       return Result.<Object, JmsAttributes>builder().output(null).build();
     }
 
-
     if (LOGGER.isDebugEnabled()) {
       LOGGER.debug(format("Creating Result: specification:[%s], type:[%s], contentType:[%s], encoding:[%s]",
                           specification.getName(), jmsMessage.getClass().getSimpleName(), contentType, encoding));
     }
 
     Object payload = getPayload(jmsMessage, specification, encoding);
-
-    JmsHeaders jmsHeaders = createJmsHeaders(jmsMessage);
+    JmsHeaders jmsHeaders = createJmsHeaders(jmsMessage, specification);
     JmsMessageProperties jmsProperties = createJmsProperties(jmsMessage);
 
     return Result.<Object, JmsAttributes>builder()
         .output(payload).mediaType(getMediaType(contentType, encoding))
-        .attributes(new DefaultJmsAttributes(jmsProperties, jmsHeaders, ackId)).build();
+        .attributes(createJmsAttributes(jmsHeaders, jmsProperties, ackId))
+        .build();
+  }
+
+  private JmsAttributes createJmsAttributes(JmsHeaders jmsHeaders, JmsMessageProperties jmsProperties,
+                                            Optional<String> ackId) {
+    DefaultJmsAttributes.Builder builder = DefaultJmsAttributes.Builder.newInstance()
+      .withHeaders(jmsHeaders)
+      .withProperties(jmsProperties);
+
+    ackId.ifPresent(builder::withAckId);
+
+    return builder.build();
   }
 
   private JmsMessageProperties createJmsProperties(Message message) {
@@ -108,7 +120,7 @@ public class JmsResultFactory {
     return toObject(message, specification, encoding);
   }
 
-  private JmsHeaders createJmsHeaders(Message jmsMessage) {
+  private JmsHeaders createJmsHeaders(Message jmsMessage, JmsSpecification specification) {
     DefaultJmsHeaders.Builder headersBuilder = new DefaultJmsHeaders.Builder();
     addCorrelationProperties(jmsMessage, headersBuilder);
     addDeliveryModeProperty(jmsMessage, headersBuilder);
@@ -120,135 +132,100 @@ public class JmsResultFactory {
     addJMSReplyTo(jmsMessage, headersBuilder);
     addTimestampProperty(jmsMessage, headersBuilder);
     addTypeProperty(jmsMessage, headersBuilder);
+
+    if (specification.equals(JMS_2_0)){
+      addDeliveryTimeProperty(jmsMessage, headersBuilder);
+    }
+
     return headersBuilder.build();
   }
 
+  private void addDeliveryTimeProperty(Message jmsMessage, DefaultJmsHeaders.Builder headersBuilder) {
+    addHeader(jmsMessage::getJMSDeliveryTime, (value) -> headersBuilder.setDeliveryTime((Long) value),
+              "An error occurred while retrieving the JMSDeliveryTime property");
+  }
+
   private void addTypeProperty(Message jmsMessage, DefaultJmsHeaders.Builder jmsHeadersBuilder) {
-    try {
-      String value = jmsMessage.getJMSType();
-      if (value != null) {
-        jmsHeadersBuilder.setType(value);
-      }
-    } catch (JMSException e) {
-      if (LOGGER.isDebugEnabled()) {
-        LOGGER.debug("An error occurred while retrieving the JMSType: %s", e.getMessage());
-      }
-    }
+    addHeader(jmsMessage::getJMSType, (value) -> jmsHeadersBuilder.setType((String) value),
+              "An error occurred while retrieving the JMSType property");
   }
 
   private void addTimestampProperty(Message jmsMessage, DefaultJmsHeaders.Builder jmsHeadersBuilder) {
-    try {
-      long value = jmsMessage.getJMSTimestamp();
-      jmsHeadersBuilder.setTimestamp(value);
-    } catch (JMSException e) {
-      if (LOGGER.isDebugEnabled()) {
-        LOGGER.debug("An error occurred while retrieving the JMSTimestamp property: %s", e.getMessage());
-      }
-    }
+    addHeader(jmsMessage::getJMSTimestamp, (value) -> jmsHeadersBuilder.setTimestamp((Long) value),
+              "An error occurred while retrieving the JMSTimestamp property");
   }
 
   private void addJMSReplyTo(Message jmsMessage, DefaultJmsHeaders.Builder jmsHeadersBuilder) {
-    try {
-      Destination replyTo = jmsMessage.getJMSReplyTo();
-      if (replyTo != null) {
-        jmsHeadersBuilder.setReplyTo(getDestination(replyTo));
-      }
-    } catch (JMSException e) {
-      if (LOGGER.isDebugEnabled()) {
-        LOGGER.debug("An error occurred while retrieving the JMSReplyTo property: %s", e.getMessage());
-      }
-    }
+    addHeader(jmsMessage::getJMSReplyTo, (value) -> jmsHeadersBuilder.setReplyTo(getDestination((Destination) value)),
+              "An error occurred while retrieving the JMSReplyTo property");
   }
 
   private void addRedeliveredProperty(Message jmsMessage, DefaultJmsHeaders.Builder jmsHeadersBuilder) {
-    try {
-      boolean value = jmsMessage.getJMSRedelivered();
-      jmsHeadersBuilder.setRedelivered(value);
-    } catch (JMSException e) {
-      if (LOGGER.isDebugEnabled()) {
-        LOGGER.debug("An error occurred while retrieving the JMSRedelivered property: %s", e.getMessage());
-      }
-    }
+    addHeader(jmsMessage::getJMSRedelivered, (value) -> jmsHeadersBuilder.setRedelivered((Boolean) value),
+              "An error occurred while retrieving the JMSRedelivered property");
   }
 
   private void addPriorityProperty(Message jmsMessage, DefaultJmsHeaders.Builder jmsHeadersBuilder) {
-    try {
-      int value = jmsMessage.getJMSPriority();
-      jmsHeadersBuilder.setPriority(value);
-    } catch (JMSException e) {
-      if (LOGGER.isDebugEnabled()) {
-        LOGGER.debug("An error occurred while retrieving the JMSPriority property: %s", e.getMessage());
-      }
-    }
+    addHeader(jmsMessage::getJMSPriority, (value) -> jmsHeadersBuilder.setPriority((Integer) value),
+              "An error occurred while retrieving the JMSPriority property");
   }
 
   private void addMessageIdProperty(Message jmsMessage, DefaultJmsHeaders.Builder jmsHeadersBuilder) {
-    try {
-      String value = jmsMessage.getJMSMessageID();
-      if (value != null) {
-        jmsHeadersBuilder.setMessageId(value);
-        //TODO here mule sets the MULE_MESSAGE_ID see if we have to do something
-      }
-    } catch (JMSException e) {
-      if (LOGGER.isDebugEnabled()) {
-        LOGGER.debug("An error occurred while retrieving the JMSMessageID property: %s", e.getMessage());
-      }
-    }
+    //TODO here mule sets the MULE_MESSAGE_ID see if we have to do something
+    addHeader(jmsMessage::getJMSMessageID, (value) -> jmsHeadersBuilder.setMessageId((String) value),
+              "An error occurred while retrieving the JMSMessageID property");
   }
 
   private void addExpirationProperty(Message jmsMessage, DefaultJmsHeaders.Builder jmsHeadersBuilder) {
-    try {
-      long value = jmsMessage.getJMSExpiration();
-      jmsHeadersBuilder.setExpiration(value);
-    } catch (JMSException e) {
-      if (LOGGER.isDebugEnabled()) {
-        LOGGER.debug("An error occurred while retrieving the JMSExpiration property: %s", e.getMessage());
-      }
-    }
+    addHeader(jmsMessage::getJMSExpiration, (value) -> jmsHeadersBuilder.setExpiration((Long) value),
+              "An error occurred while retrieving the JMSExpiration property");
   }
 
   private void addDestinationProperty(Message jmsMessage, DefaultJmsHeaders.Builder jmsHeadersBuilder) {
+    addHeader(jmsMessage::getJMSDestination, (value) -> jmsHeadersBuilder.setDestination(getDestination((Destination) value)),
+              "An error occurred while retrieving the JMSDestination property");
+  }
+
+  private void addDeliveryModeProperty(Message jmsMessage, DefaultJmsHeaders.Builder jmsHeadersBuilder) {
+    addHeader(jmsMessage::getJMSDeliveryMode, (value) -> jmsHeadersBuilder.setDeliveryMode((Integer) value),
+              "An error occurred while retrieving the JMSDeliveryMode property");
+  }
+
+  private void addCorrelationProperties(Message jmsMessage, DefaultJmsHeaders.Builder jmsHeadersBuilder) {
+    //TODO previously here the MULE_CORRELATION_ID was set also, see what to do with that.
+    addHeader(jmsMessage::getJMSCorrelationID, (value) -> jmsHeadersBuilder.setCorrelactionId((String) value),
+              "An error occurred while retrieving the JMSCorrelationID property");
+  }
+
+  private void addHeader(JmsHeaderValueSupplier valueSupplier, JmsHeaderValueConsumer headerSetter, String message) {
     try {
-      Destination value = jmsMessage.getJMSDestination();
+      Object value = valueSupplier.get();
       if (value != null) {
-        jmsHeadersBuilder.setDestination(getDestination(value));
+        headerSetter.set(value);
       }
     } catch (JMSException e) {
       if (LOGGER.isDebugEnabled()) {
-        LOGGER.debug("An error occurred while retrieving the JMSDestination property: %s", e.getMessage());
+        LOGGER.debug(message, e.getMessage());
       }
     }
   }
 
   private JmsDestination getDestination(Destination value) throws JMSException {
     return value instanceof Queue
-        ? new JmsDestination(((Queue) value).getQueueName(), QUEUE)
-        : new JmsDestination(((Topic) value).getTopicName(), TOPIC);
+      ? new JmsDestination(((Queue) value).getQueueName(), QUEUE)
+      : new JmsDestination(((Topic) value).getTopicName(), TOPIC);
   }
 
-  private void addDeliveryModeProperty(Message jmsMessage, DefaultJmsHeaders.Builder jmsHeadersBuilder) {
-    try {
-      int value = jmsMessage.getJMSDeliveryMode();
-      jmsHeadersBuilder.setDeliveryMode(value);
-    } catch (JMSException e) {
-      if (LOGGER.isDebugEnabled()) {
-        LOGGER.debug("An error occurred while retrieving the JMSDeliveryMode property: %s", e.getMessage());
-      }
-    }
+  private interface JmsHeaderValueSupplier<T> {
+
+    T get() throws JMSException;
+
   }
 
-  private void addCorrelationProperties(Message jmsMessage, DefaultJmsHeaders.Builder jmsHeadersBuilder) {
-    try {
-      String value = jmsMessage.getJMSCorrelationID();
-      if (value != null) {
-        jmsHeadersBuilder.setCorrelactionId(value);
-        //TODO previously here the MULE_CORRELATION_ID was set also, see what to do with that.
-      }
-    } catch (JMSException e) {
-      if (LOGGER.isDebugEnabled()) {
-        LOGGER.debug("An error occurred while retrieving the JMSCorrelationID property: %s", e.getMessage());
-      }
-    }
+  private interface JmsHeaderValueConsumer<T> {
+
+    void set(T value) throws JMSException;
+
   }
 
 }

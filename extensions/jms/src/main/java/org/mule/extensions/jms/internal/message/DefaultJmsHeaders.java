@@ -12,7 +12,7 @@ import org.mule.extensions.jms.api.message.JmsHeaders;
 
 import javax.jms.DeliveryMode;
 
-public class DefaultJmsHeaders implements JmsHeaders {
+final class DefaultJmsHeaders implements JmsHeaders {
 
   private DefaultJmsHeaders() {}
 
@@ -25,7 +25,7 @@ public class DefaultJmsHeaders implements JmsHeaders {
    * the delivery mode specified when the message was sent, which
    * can be either {@link DeliveryMode#PERSISTENT} or {@link DeliveryMode#NON_PERSISTENT}
    */
-  private int deliveryMode;
+  private Integer deliveryMode;
 
   /**
    * JMS provider calculates its expiration time by adding the {@code timeToLive}
@@ -37,7 +37,7 @@ public class DefaultJmsHeaders implements JmsHeaders {
    *
    * the message's expiration time or {@code zero} if the message does not expire
    */
-  private long expiration;
+  private Long expiration;
 
   /**
    * JMS defines a ten level priority value with 0 as the lowest priority and 9 as the highest.
@@ -49,7 +49,7 @@ public class DefaultJmsHeaders implements JmsHeaders {
    *
    * the message priority level.
    */
-  private int priority;
+  private Integer priority;
 
   /**
    * a value that uniquely identifies each message sent by a provider.
@@ -66,7 +66,7 @@ public class DefaultJmsHeaders implements JmsHeaders {
    * If the Producer was hinted to {@code disableMessageTimestamp}, then {@code zero}
    * is returned.
    */
-  private long timestamp;
+  private Long timestamp;
 
   /**
    * Used to link one message with another. A typical use is to link a response
@@ -95,7 +95,7 @@ public class DefaultJmsHeaders implements JmsHeaders {
    *
    * {@code true} if the message may have been delivered in the past
    */
-  private boolean redelivered;
+  private Boolean redelivered;
 
   /**
    * Present only in JMS 2.0 Messages
@@ -109,7 +109,7 @@ public class DefaultJmsHeaders implements JmsHeaders {
    *
    * @return the message's delivery time or {@code zero} if no {@code deliveryDelay} was set
    */
-  private long deliveryTime;
+  private Long deliveryTime;
 
   /**
    * {@inheritDoc}
@@ -123,7 +123,7 @@ public class DefaultJmsHeaders implements JmsHeaders {
    * {@inheritDoc}
    */
   @Override
-  public long getJMSTimestamp() {
+  public Long getJMSTimestamp() {
     return timestamp;
   }
 
@@ -155,7 +155,7 @@ public class DefaultJmsHeaders implements JmsHeaders {
    * {@inheritDoc}
    */
   @Override
-  public int getJMSDeliveryMode() {
+  public Integer getJMSDeliveryMode() {
     return deliveryMode;
   }
 
@@ -163,7 +163,7 @@ public class DefaultJmsHeaders implements JmsHeaders {
    * {@inheritDoc}
    */
   @Override
-  public boolean getJMSRedelivered() {
+  public Boolean getJMSRedelivered() {
     return redelivered;
   }
 
@@ -179,7 +179,7 @@ public class DefaultJmsHeaders implements JmsHeaders {
    * {@inheritDoc}
    */
   @Override
-  public long getJMSExpiration() {
+  public Long getJMSExpiration() {
     return expiration;
   }
 
@@ -187,7 +187,7 @@ public class DefaultJmsHeaders implements JmsHeaders {
    * {@inheritDoc}
    */
   @Override
-  public long getJMSDeliveryTime() {
+  public Long getJMSDeliveryTime() {
     return deliveryTime;
   }
 
@@ -195,7 +195,7 @@ public class DefaultJmsHeaders implements JmsHeaders {
    * {@inheritDoc}
    */
   @Override
-  public int getJMSPriority() {
+  public Integer getJMSPriority() {
     return priority;
   }
 
@@ -252,7 +252,6 @@ public class DefaultJmsHeaders implements JmsHeaders {
       jmsHeaders.priority = priority;
       return this;
     }
-
 
     public Builder setDeliveryTime(long deliveryTime) {
       jmsHeaders.deliveryTime = deliveryTime;

@@ -12,6 +12,10 @@ import org.mule.extensions.jms.internal.connection.provider.BaseConnectionProvid
 import org.mule.runtime.extension.api.annotation.Expression;
 import org.mule.runtime.extension.api.annotation.param.Optional;
 import org.mule.runtime.extension.api.annotation.param.Parameter;
+import org.mule.runtime.extension.api.annotation.param.display.Password;
+
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
 
 /**
  * Common connection parameters for the {@link BaseConnectionProvider}
@@ -20,18 +24,42 @@ import org.mule.runtime.extension.api.annotation.param.Parameter;
  */
 public class GenericConnectionParameters {
 
+  /**
+   * Username to be used when providing credentials fpr authentication.
+   */
   @Parameter
   @Optional
   private String username;
 
+  /**
+   * Password to be used when providing credentials fpr authentication.
+   */
   @Parameter
   @Optional
+  @Password
   private String password;
 
+  /**
+   *  Client identifier to be assigned to the {@link Connection} upon creation.
+   *  The purpose of client identifier is to associate a connection and its objects
+   *  with a state maintained on behalf of the client by a provider. By definition,
+   *  the client state identified by a client identifier can be "in use" by only one
+   *  client at a time.
+   *  <p>
+   *  The only use of a client identifier defined by JMS is its mandatory use in
+   *  identifying an unshared durable subscription or its optional use in identifying
+   *  a shared durable or non-durable subscription.
+   */
   @Parameter
   @Optional
   private String clientId;
 
+  /**
+   * Versions of the {@link JmsSpecification} to be used by the extension.
+   * This version should be compatible with the implementation of the {@link ConnectionFactory}
+   * configured. Functionality available only for certain versions of the spec
+   * will throw an error if the version requirement is not met.
+   */
   @Parameter
   @Optional(defaultValue = "JMS_1_1")
   @Expression(NOT_SUPPORTED)
